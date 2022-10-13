@@ -5,6 +5,10 @@ VisualStudioVersion = 17.3.32922.545
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ElectronicShopper", "ElectronicShopper\ElectronicShopper.csproj", "{3C0EC367-CE66-4D0F-AEDB-90B747FE3368}"
 EndProject
+Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "ElectronicShopperData", "ElectronicShopperData\ElectronicShopperData.sqlproj", "{DA94891D-CC0D-4991-A860-1859857632B1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Database", "Database", "{97B3C99A-2684-425D-B120-F96B95B050D4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,9 +19,18 @@ Global
 		{3C0EC367-CE66-4D0F-AEDB-90B747FE3368}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C0EC367-CE66-4D0F-AEDB-90B747FE3368}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C0EC367-CE66-4D0F-AEDB-90B747FE3368}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA94891D-CC0D-4991-A860-1859857632B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA94891D-CC0D-4991-A860-1859857632B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA94891D-CC0D-4991-A860-1859857632B1}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{DA94891D-CC0D-4991-A860-1859857632B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA94891D-CC0D-4991-A860-1859857632B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA94891D-CC0D-4991-A860-1859857632B1}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DA94891D-CC0D-4991-A860-1859857632B1} = {97B3C99A-2684-425D-B120-F96B95B050D4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {858749AF-14E4-4C49-B969-1E6F5A7EA735}

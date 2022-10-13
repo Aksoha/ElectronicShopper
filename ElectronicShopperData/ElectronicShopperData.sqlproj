@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Name>ElectronicShopperData</Name>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>4.1</ProjectVersion>
+    <ProjectGuid>{da94891d-cc0d-4991-a860-1859857632b1}</ProjectGuid>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql130DatabaseSchemaProvider</DSP>
+    <OutputType>Database</OutputType>
+    <RootPath>
+    </RootPath>
+    <RootNamespace>ElectronicShopperData</RootNamespace>
+    <AssemblyName>ElectronicShopperData</AssemblyName>
+    <ModelCollation>1033, CI</ModelCollation>
+    <DefaultFileStructure>BySchemaAndSchemaType</DefaultFileStructure>
+    <DeployToDatabase>True</DeployToDatabase>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetLanguage>CS</TargetLanguage>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <SqlServerVerification>False</SqlServerVerification>
+    <IncludeCompositeObjects>True</IncludeCompositeObjects>
+    <TargetDatabaseSet>True</TargetDatabaseSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
+    <!-- Default to the v11.0 targets path if the targets file for the current VS version is not found -->
+    <SSDTExists Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets')">True</SSDTExists>
+    <VisualStudioVersion Condition="'$(SSDTExists)' == ''">11.0</VisualStudioVersion>
+  </PropertyGroup>
+  <Import Condition="'$(SQLDBExtensionsRefPath)' != ''" Project="$(SQLDBExtensionsRefPath)\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
+  <Import Condition="'$(SQLDBExtensionsRefPath)' == ''" Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
+  <ItemGroup>
+    <Folder Include="Properties" />
+    <Folder Include="dbo" />
+    <Folder Include="dbo\Stored Procedures" />
+    <Folder Include="dbo\Tables" />
+    <Folder Include="dbo\Stored Procedures\User" />
+    <Folder Include="dbo\Stored Procedures\Order" />
+    <Folder Include="dbo\Stored Procedures\Product" />
+    <Folder Include="dbo\Stored Procedures\Inventory" />
+    <Folder Include="dbo\Stored Procedures\Category" />
+  </ItemGroup>
+  <ItemGroup>
+    <Build Include="dbo\Tables\Category.sql" />
+    <Build Include="dbo\Tables\Inventory.sql" />
+    <Build Include="dbo\Tables\Product.sql" />
+    <Build Include="dbo\Tables\ProductImage.sql" />
+    <Build Include="dbo\Tables\Order.sql" />
+    <Build Include="dbo\Tables\OrderDetails.sql" />
+    <Build Include="dbo\Tables\User.sql" />
+    <Build Include="dbo\Stored Procedures\User\spUser_Insert.sql" />
+    <Build Include="dbo\Stored Procedures\User\spUser_GetById.sql" />
+    <Build Include="dbo\Stored Procedures\Order\spOrderDetails_Insert.sql" />
+    <Build Include="dbo\Stored Procedures\Order\spOrder_Insert.sql" />
+    <Build Include="dbo\Stored Procedures\Product\spProductImage_Insert.sql" />
+    <Build Include="dbo\Stored Procedures\Product\spProductImage_GetProductImages.sql" />
+    <Build Include="dbo\Tables\ProductTemplate.sql" />
+    <Build Include="dbo\Stored Procedures\Product\spProduct_GetAll.sql" />
+    <Build Include="dbo\Stored Procedures\Product\spProduct_Insert.sql" />
+    <Build Include="dbo\Stored Procedures\Inventory\spInventory_Insert.sql" />
+    <Build Include="dbo\Stored Procedures\Product\spProductTemplate_Insert.sql" />
+    <Build Include="dbo\Stored Procedures\Product\spProductTemplate_Update.sql" />
+    <Build Include="dbo\Stored Procedures\Product\spProduct_GetTemplate.sql" />
+    <Build Include="dbo\Stored Procedures\Inventory\spInventory_Update.sql" />
+    <Build Include="dbo\Stored Procedures\Product\spProductImage_Delete.sql" />
+    <Build Include="dbo\Stored Procedures\Category\spCategory_Insert.sql" />
+    <Build Include="dbo\Stored Procedures\Category\spCategory_GetAllLeafs.sql" />
+    <Build Include="dbo\Stored Procedures\Category\spCategory_GetAncestors.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ElectronicShopperData.publish.xml" />
+  </ItemGroup>
+</Project>
