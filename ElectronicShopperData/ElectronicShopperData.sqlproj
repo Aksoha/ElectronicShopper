@@ -91,6 +91,7 @@
     <Build Include="dbo\Stored Procedures\Category\spCategory_Insert.sql" />
     <Build Include="dbo\Stored Procedures\Category\spCategory_GetAllLeafs.sql" />
     <Build Include="dbo\Stored Procedures\Category\spCategory_GetAncestors.sql" />
+    <Build Include="dbo\Stored Procedures\Category\spCategory_Update.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ElectronicShopperData.publish.xml" />
