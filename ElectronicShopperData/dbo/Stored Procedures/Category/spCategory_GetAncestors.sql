@@ -20,5 +20,6 @@ BEGIN
 
 	SELECT *
 	FROM #results
+    WHERE Id != @Id
 
 END
