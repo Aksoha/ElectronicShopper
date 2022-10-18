@@ -9,4 +9,6 @@ BEGIN
 	INSERT INTO Category(ParentId, CategoryName)
 	VALUES (@ParentId, @CategoryName)
 
+	SELECT SCOPE_IDENTITY()
+	    
 END

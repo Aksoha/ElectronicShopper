@@ -1,6 +1,6 @@
-namespace ElectronicShopper.Library.Models;
+namespace ElectronicShopper.DataAccess.Models.Internal;
 
-public class UserModel
+internal class UserDbModel
 {
     public int Id { get; set; }
     public string UserId { get; set; } = string.Empty;

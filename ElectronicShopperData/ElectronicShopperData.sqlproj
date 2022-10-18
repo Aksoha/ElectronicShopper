@@ -61,9 +61,6 @@
     <Folder Include="dbo\Tables" />
     <Folder Include="dbo\Stored Procedures\User" />
     <Folder Include="dbo\Stored Procedures\Order" />
-    <Folder Include="dbo\Stored Procedures\Product" />
-    <Folder Include="dbo\Stored Procedures\Inventory" />
-    <Folder Include="dbo\Stored Procedures\Category" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\Category.sql" />
@@ -86,12 +83,17 @@
     <Build Include="dbo\Stored Procedures\Product\spProductTemplate_Insert.sql" />
     <Build Include="dbo\Stored Procedures\Product\spProductTemplate_Update.sql" />
     <Build Include="dbo\Stored Procedures\Product\spProduct_GetTemplate.sql" />
-    <Build Include="dbo\Stored Procedures\Inventory\spInventory_Update.sql" />
+    <Build Include="dbo\Stored Procedures\Inventory\spInventory_UpdateQuantity.sql" />
     <Build Include="dbo\Stored Procedures\Product\spProductImage_Delete.sql" />
     <Build Include="dbo\Stored Procedures\Category\spCategory_Insert.sql" />
     <Build Include="dbo\Stored Procedures\Category\spCategory_GetAllLeafs.sql" />
     <Build Include="dbo\Stored Procedures\Category\spCategory_GetAncestors.sql" />
     <Build Include="dbo\Stored Procedures\Category\spCategory_Update.sql" />
+     <Build Include="dbo\Stored Procedures\Category\spCategory_GetById.sql" />
+     <Build Include="dbo\Stored Procedures\Inventory\spInventory_GetByProductId.sql" />
+     <Build Include="dbo\Stored Procedures\Product\spProductTemplate_GetAll.sql" />
+     <Build Include="dbo\Stored Procedures\Product\spProductTemplate_GetById.sql" />
+   
   </ItemGroup>
   <ItemGroup>
     <None Include="ElectronicShopperData.publish.xml" />

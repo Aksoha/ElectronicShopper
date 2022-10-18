@@ -9,6 +9,10 @@ Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "ElectronicShopperData", "El
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Database", "Database", "{97B3C99A-2684-425D-B120-F96B95B050D4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ElectronicShopper.Library", "ElectronicShopper.Library\ElectronicShopper.Library.csproj", "{723C570B-136A-4233-93B3-D27EA7F387F3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ElectronicShopper.DataAccess", "ElectronicShopper.DataAccess\ElectronicShopper.DataAccess.csproj", "{6EECBE05-C2B9-40FB-A968-08CAB88C9957}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +29,14 @@ Global
 		{DA94891D-CC0D-4991-A860-1859857632B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA94891D-CC0D-4991-A860-1859857632B1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DA94891D-CC0D-4991-A860-1859857632B1}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{723C570B-136A-4233-93B3-D27EA7F387F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{723C570B-136A-4233-93B3-D27EA7F387F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{723C570B-136A-4233-93B3-D27EA7F387F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{723C570B-136A-4233-93B3-D27EA7F387F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EECBE05-C2B9-40FB-A968-08CAB88C9957}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EECBE05-C2B9-40FB-A968-08CAB88C9957}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EECBE05-C2B9-40FB-A968-08CAB88C9957}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EECBE05-C2B9-40FB-A968-08CAB88C9957}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

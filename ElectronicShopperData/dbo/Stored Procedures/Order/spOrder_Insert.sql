@@ -7,4 +7,6 @@ BEGIN
 	INSERT INTO [Order](UserId)
 	VALUES (@UserId)
 
+    SELECT SCOPE_IDENTITY()
+    
 END
