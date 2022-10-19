@@ -9,6 +9,7 @@ public static class DatabaseServiceExtensions
         services.AddTransient<ISqlDataAccess, SqlDataAccess>();
         services.AddTransient<ICategoryData, CategoryData>();
         services.AddTransient<IInventoryData, InventoryData>();
+        services.AddTransient<IOrderData, OrderData>();
         services.AddTransient<IProductData, ProductData>();
         services.AddTransient<IUserData, UserData>();
 
