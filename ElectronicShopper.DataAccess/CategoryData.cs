@@ -16,7 +16,7 @@ public class CategoryData : ICategoryData
         _mapper = mapper;
     }
 
-    public async Task<List<CategoryModel>> GetCategories()
+    public async Task<List<CategoryModel>> GetLeafCategories()
     {
         _sql.StartTransaction(ConnectionStringName);
         var result = await _sql.LoadData<CategoryDbModel, dynamic>("dbo.spCategory_GetAllLeafs", null!);
@@ -32,6 +32,16 @@ public class CategoryData : ICategoryData
         return output;
     }
 
+    public async Task<List<CategoryModel>> GetRootCategories()
+    {
+        _sql.StartTransaction(ConnectionStringName);
+        var result = await _sql.LoadData<CategoryDbModel, dynamic>("dbo.spCategory_GetRoot", null!);
+        _sql.CommitTransaction();
+
+        var output = _mapper.Map<List<CategoryModel>>(result);
+        return output;
+    }
+    
     public async Task<CategoryModel?> GetById(int id)
     {
         _sql.StartTransaction(ConnectionStringName);
