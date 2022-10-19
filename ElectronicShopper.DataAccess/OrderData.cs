@@ -1,9 +1,10 @@
 using AutoMapper;
+using ElectronicShopper.DataAccess.Models;
 using ElectronicShopper.Library.Models;
 
-namespace ElectronicShopper.DataAccess.Models;
+namespace ElectronicShopper.DataAccess;
 
-public class OrderData
+public class OrderData : IOrderData
 {
     private readonly ISqlDataAccess _sql;
     private readonly IMapper _mapper;
