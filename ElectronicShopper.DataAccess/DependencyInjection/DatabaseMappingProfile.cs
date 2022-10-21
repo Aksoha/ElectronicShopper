@@ -34,9 +34,9 @@ public class DatabaseMappingProfile : Profile
 
     private void MapUserModels()
     {
-        CreateMap<UserModel, UserDbModel>().ReverseMap();
+    
     }
-
+    
     private void MapProductModels()
     {
         CreateMap<ProductModel, ProductDbModel>()

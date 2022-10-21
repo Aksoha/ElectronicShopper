@@ -59,7 +59,6 @@
     <Folder Include="dbo" />
     <Folder Include="dbo\Stored Procedures" />
     <Folder Include="dbo\Tables" />
-    <Folder Include="dbo\Stored Procedures\User" />
     <Folder Include="dbo\Stored Procedures\Order" />
   </ItemGroup>
   <ItemGroup>
@@ -69,9 +68,6 @@
     <Build Include="dbo\Tables\ProductImage.sql" />
     <Build Include="dbo\Tables\Order.sql" />
     <Build Include="dbo\Tables\OrderDetails.sql" />
-    <Build Include="dbo\Tables\User.sql" />
-    <Build Include="dbo\Stored Procedures\User\spUser_Insert.sql" />
-    <Build Include="dbo\Stored Procedures\User\spUser_GetById.sql" />
     <Build Include="dbo\Stored Procedures\Order\spOrderDetails_Insert.sql" />
     <Build Include="dbo\Stored Procedures\Order\spOrder_Insert.sql" />
     <Build Include="dbo\Stored Procedures\Product\spProductImage_Insert.sql" />

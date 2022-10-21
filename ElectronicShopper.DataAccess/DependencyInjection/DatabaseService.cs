@@ -1,3 +1,4 @@
+using ElectronicShopper.DataAccess.Data;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ElectronicShopper.DataAccess.DependencyInjection;
@@ -11,7 +12,6 @@ public static class DatabaseServiceExtensions
         services.AddTransient<IInventoryData, InventoryData>();
         services.AddTransient<IOrderData, OrderData>();
         services.AddTransient<IProductData, ProductData>();
-        services.AddTransient<IUserData, UserData>();
 
         return services;
     }

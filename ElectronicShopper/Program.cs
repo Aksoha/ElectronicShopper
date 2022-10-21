@@ -1,7 +1,8 @@
-using ElectronicShopper.Areas.Identity;
-using ElectronicShopper.Data;
 using ElectronicShopper.DataAccess.DependencyInjection;
-using Microsoft.AspNetCore.Components.Authorization;
+using ElectronicShopper.DataAccess.Identity;
+using ElectronicShopper.Library;
+using ElectronicShopper.Middleware;
+using ElectronicShopper.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,14 +13,18 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
+    .AddDefaultTokenProviders()
+    .AddUserManager<ApplicationUserManager>()
+    .AddSignInManager<ApplicationSignInManager>()
+    .AddUserStore<ApplicationUserStore>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddDatabaseService();
+builder.Services.AddScoped<Navigation>();
 
 
 var app = builder.Build();
@@ -44,6 +49,8 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<AuthorizationMiddleware>();
+
 
 app.MapControllers();
 app.MapBlazorHub();
