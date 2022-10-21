@@ -4,13 +4,12 @@
 
 <div class="page">
     <main>
-        <div class="top-row px-4 auth">
-            <LoginDisplay />
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+        <div class="top-bar">
+            <AppBar/>
+            <CategoryBar/>
         </div>
-
-        <article class="content px-4">
+        <div class="content px-4">
             @Body
-        </article>
+        </div>
     </main>
 </div>

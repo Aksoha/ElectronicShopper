@@ -1,0 +1,44 @@
+﻿#appbar {
+    height: 60px;
+    width: 100vw;
+}
+
+.appbar-title {
+    cursor: pointer;
+    font-size: clamp(18px, 1vw, 32px);
+}
+
+.appbar-separator {
+    height: 50%;
+    margin: 5px;
+    align-self: center;
+    border-right: black solid 1px;
+}
+
+.cart {
+    cursor: pointer;
+}
+
+.cart img {
+    height: 100%;
+}
+
+.cart-count {
+    border-radius: 50%;
+    color: white;
+    background-color: #ff4343;
+    height: 15px;
+    aspect-ratio: 1 / 1;
+    font-size: 11px;
+    position: relative;
+    left: 25px;
+    top: -38px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+

@@ -1,0 +1,33 @@
+﻿@using ElectronicShopper.Library.Models
+@using ElectronicShopper.DataAccess.Data
+@using ElectronicShopper.Library
+@inject ICategoryData CategoryData
+@inject Navigation NavManager
+
+
+<div class="d-flex justify-content-center category-bar">
+    @foreach (var category in _categories)
+    {
+        <h3 class="align-self-center category-nav" onclick="@(() => OnCategorySelected(category))">
+            @category.Name
+        </h3>
+    }
+</div>
+
+
+@code {
+
+    List<CategoryModel> _categories = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _categories = await CategoryData.GetRootCategories();
+    }
+
+    private void OnCategorySelected(CategoryModel selectedCategory)
+    {
+        NavManager.NavigateTo($"/c/{selectedCategory.Id}");
+    }
+    
+}

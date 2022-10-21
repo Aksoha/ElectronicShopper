@@ -23,11 +23,11 @@ a, .btn-link {
 }
 
 .valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
+    /*outline: 1px solid #26b050;*/
 }
 
 .invalid {
-    outline: 1px solid red;
+    /*outline: 1px solid red;*/
 }
 
 .validation-message {
@@ -62,3 +62,31 @@ a, .btn-link {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+    .top-bar {
+        background-color: white;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+.form-input {
+    border-radius: 25px;
+    border: #8b8b8b solid 1px;
+    font-size: 1rem;
+    padding: 0.3rem 1rem;
+    margin: 20px;
+}
+
+.form-input:focus {
+    outline:#8b8b8b solid 1px;
+}
+
+
+.form-confirm-btn {
+    border-color:transparent;
+    border-radius: 25px;
+    background-color: #0a58ca;
+    color: white;
+    font-size: 15px;
+}

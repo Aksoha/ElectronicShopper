@@ -1,0 +1,123 @@
+﻿@page "/register"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using System.Text
+@using ElectronicShopper.DataAccess.Identity
+@using ElectronicShopper.Library
+@using ElectronicShopper.Library.Models
+@using AuthorizationMiddleware = ElectronicShopper.Middleware.AuthorizationMiddleware
+@inject Navigation NavManager
+@* @inject IUserEmailStore<IdentityUser> EmailStore *@
+@inject IUserStore<ApplicationUser> UserStore
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+
+<EditForm Model="@_registerModel" OnValidSubmit="@OnValidSubmit">
+    <DataAnnotationsValidator/>
+
+
+    <div class="row content">
+        <div class="col-md-2">
+            <label for="first-name">First Name</label>
+        </div>
+        <div class="col-md-3">
+            <InputText id="first-name" @bind-Value="_registerModel.FirstName"/>
+        </div>
+        <div class="col-md-5">
+            <ValidationMessage For="@(() => _registerModel.FirstName)"/>
+        </div>
+    </div>
+    <div class="row content">
+        <div class="col-md-2">
+            <label for="last-name">Last Name</label>
+        </div>
+        <div class="col-md-3">
+            <InputText id="last-name" @bind-Value="_registerModel.LastName"/>
+        </div>
+        <div class="col-md-5">
+            <ValidationMessage For="@(() => _registerModel.LastName)"/>
+        </div>
+    </div>
+    <div class="row content">
+        <div class="col-md-2">
+            <label for="email">Email</label>
+        </div>
+        <div class="col-md-3">
+            <InputText id="email" @bind-Value="_registerModel.Email"/>
+        </div>
+        <div class="col-md-5">
+            <ValidationMessage For="@(() => _registerModel.Email)"/>
+        </div>
+    </div>
+    <div class="row content">
+        <div class="col-md-2">
+            <label for="password">Password</label>
+        </div>
+        <div class="col-md-3">
+            <InputText id="password" @bind-Value="_registerModel.Password"/>
+        </div>
+        <div class="col-md-5">
+            <ValidationMessage For="@(() => _registerModel.Password)"/>
+        </div>
+    </div>
+    <div class="row content">
+        <div class="col-md-2">
+            <label for="confirm-password">Confirrm Password</label>
+        </div>
+        <div class="col-md-3">
+            <InputText id="confirm-password" @bind-Value="_registerModel.ConfirmPassword"/>
+        </div>
+        <div class="col-md-5">
+            <ValidationMessage For="@(() => _registerModel.ConfirmPassword)"/>
+        </div>
+    </div>
+    <button type="submit">Create account</button>
+
+</EditForm>
+
+@code {
+
+    private RegisterModel _registerModel = new();
+
+
+    private async Task OnValidSubmit()
+    {
+        await RegisterUser();
+        var user = await UserManager.FindByEmailAsync(_registerModel.Email);
+        if (user is null)
+            return;
+
+        if (await SignInManager.CanSignInAsync(user))
+        {
+            var key = Guid.NewGuid();
+        }
+    }
+
+    private async Task RegisterUser()
+    {
+        var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
+
+        var user = new ApplicationUser
+        {
+            FirstName = _registerModel.FirstName!,
+            LastName = _registerModel.LastName!,
+            RegistrationTime = DateTime.UtcNow
+        };
+        await UserStore.SetUserNameAsync(user, _registerModel.Email, CancellationToken.None);
+        await emailStore.SetEmailAsync(user, _registerModel.Email, CancellationToken.None);
+        var result = await UserManager.CreateAsync(user, _registerModel.Password);
+
+        if (result.Succeeded)
+        {
+    // TODO: add callback url
+            var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+    // HACK: no mailing system as of now, all accounts will be auto confirmed
+            await emailStore.SetEmailConfirmedAsync(user, true, CancellationToken.None);
+
+            AuthorizationMiddleware.RequestLogin(new LoginModel { Email = _registerModel.Email, Password = _registerModel.Password, RememberMe = true }, NavManager);
+        }
+    }
+
+}

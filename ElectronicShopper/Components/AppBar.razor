@@ -1,0 +1,49 @@
+﻿@inject ICartService CartService
+@inject Navigation NavManager
+@using ElectronicShopper.Library
+@implements IDisposable
+
+<div id="appbar" class="d-flex px-3">
+    <h2 class="me-auto p-2 align-self-center appbar-title" onclick="@(() => NavManager.NavigateTo("/"))">ElectronicsShopper</h2>
+    <div class="p-2 align-self-center">
+        <LoginDisplay/>
+    </div>
+
+    <div class="appbar-separator"></div>
+    <div class="p-2 cart" onclick="@OnCartClick">
+        <img src="images/Basket.png" alt="basket">
+
+        @if (CartService.Count > 0)
+        {
+            <div class="cart-count">
+                @CartService.Count
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+
+    protected override Task OnInitializedAsync()
+    {
+        CartService.OnChange += UpdateCartIcon;
+        return Task.CompletedTask;
+    }
+
+    private void OnCartClick()
+    {
+        NavManager.NavigateTo("/cart");
+    }
+
+    public void Dispose()
+    {
+        CartService.OnChange -= UpdateCartIcon;
+    }
+
+
+    private void UpdateCartIcon()
+    {
+        StateHasChanged();
+    }
+    
+}

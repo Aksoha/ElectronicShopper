@@ -1,0 +1,56 @@
+﻿@page "/login"
+@page "/login/{errorMessage}"
+@using System.Security.Authentication
+@using ElectronicShopper.Library
+@using ElectronicShopper.Library.Models
+@using Microsoft.AspNetCore.Identity
+@using AuthorizationMiddleware = ElectronicShopper.Middleware.AuthorizationMiddleware
+@inject Navigation NavManager
+
+<PageTitle>Login</PageTitle>
+
+<EditForm Model="@_loginModel" OnValidSubmit="Authenticate">
+    <DataAnnotationsValidator/>
+
+    <div class="d-flex flex-column align-items-center just my-5">
+        <div class="row justify-content-center gy-5">
+            <div class="col-auto login-form">
+                <h2 class="login-text">Login</h2>
+                <InputText class="form-input login-input" id="email" @bind-Value="_loginModel.Email" placeholder="Email"/>
+                <div class="align-self-center">
+                    <ValidationMessage For="@(() => _loginModel.Email)"/>
+                </div>
+                <InputText class="form-input login-input" id="password" @bind-Value="_loginModel.Password" type="password" placeholder="Password"/>
+                <div class="align-self-center">
+                    <ValidationMessage For="@(() => _loginModel.Password)"/>
+                </div>
+                <a class="nav-link login-nav-link" href="@ForgotPasswordUrl">Forgot Password</a>
+                <label for="remember-me">Remember me</label>
+                <input id="remember-me" type="checkbox" checked="@_loginModel.RememberMe">
+                @if (string.IsNullOrWhiteSpace(ErrorMessage) == false)
+                {
+                    <div class="validation-message">@ErrorMessage</div>
+                }
+                <button class="form-confirm-btn login-btn" type="submit">Login</button>
+            </div>
+            <div class="col-auto">
+                <h2>Do not have an account?</h2>
+                <button type="submit" class="form-confirm-btn login-btn" onclick="@(() => NavManager.NavigateTo("/register"))">Register</button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    private readonly LoginModel _loginModel = new() { RememberMe = true };
+        private const string ForgotPasswordUrl = "/register";
+    
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "errorMessage")]
+    public string ErrorMessage { get; set; } = "";
+
+    private void Authenticate()
+    {
+        AuthorizationMiddleware.RequestLogin(_loginModel, NavManager);
+    }
+}

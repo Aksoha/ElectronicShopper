@@ -1,0 +1,18 @@
+﻿.category-bar {
+    background-color: #f5f5f5;
+    box-shadow: rgb(0 0 0 / 64%) 0 2px 8px -5px;
+}
+
+.category-nav {
+    padding: 0 20px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    border-right: black solid 1px;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: center;
+}
+.category-nav:last-of-type {
+    border-right: none;
+}
+

@@ -1,12 +1,36 @@
-﻿<AuthorizeView>
+﻿@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@using ElectronicShopper.DataAccess.Identity
+@using ElectronicShopper.Library
+@inject Navigation NavManager
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+
+<AuthorizeView>
     <Authorized>
-        <a href="Identity/Account/Manage">Hello, @context.User.Identity?.Name!</a>
-        <form method="post" action="Identity/Account/LogOut">
-            <button type="submit" class="nav-link btn btn-link">Log out</button>
-        </form>
+        @UserManager.GetUserAsync(context.User).Result.FirstName
+        <button class="btn" onclick="@Logout">Logout</button>
     </Authorized>
     <NotAuthorized>
-        <a href="Identity/Account/Register">Register</a>
-        <a href="Identity/Account/Login">Log in</a>
+        <button class="btn" @onclick="@(() => NavManager.NavigateTo("/login"))">Login</button>
+        <button class="btn" @onclick="@(() => NavManager.NavigateTo("/register"))">Register</button>
     </NotAuthorized>
 </AuthorizeView>
+
+@code
+{
+
+    private async Task<string> GetUserName(ClaimsPrincipal user)
+    {
+        var u = await UserManager.GetUserAsync(user);
+        return u.FirstName;
+    }
+    
+    private void Logout()
+    {
+        NavManager.NavigateTo("/logout", true);
+    }
+    
+    
+}
+
