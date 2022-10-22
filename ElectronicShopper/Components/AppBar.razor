@@ -1,12 +1,26 @@
 ﻿@inject ICartService CartService
 @inject Navigation NavManager
 @using ElectronicShopper.Library
+@using Microsoft.AspNetCore.Identity
+@using ElectronicShopper.DataAccess.Identity
+@using System.Security.Claims
 @implements IDisposable
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
 
 <div id="appbar" class="d-flex px-3">
-    <h2 class="me-auto p-2 align-self-center appbar-title" onclick="@(() => NavManager.NavigateTo("/"))">ElectronicsShopper</h2>
+    <h2 class="me-auto my-auto p-2 align-self-center appbar-title" onclick="@(() => NavManager.NavigateTo("/"))">ElectronicsShopper</h2>
     <div class="p-2 align-self-center">
-        <LoginDisplay/>
+        @* <LoginDisplay/> *@
+        <AuthorizeView>
+            <Authorized>
+                @UserManager.GetUserAsync(context.User).Result.FirstName
+                <div class="profile-link" onclick="@(() => NavManager.NavigateTo("/logout", true))">Logout</div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="profile-link" @onclick="@(() => NavManager.NavigateTo("/login"))">Login</div>
+            </NotAuthorized>
+        </AuthorizeView>
     </div>
 
     <div class="appbar-separator"></div>
@@ -45,5 +59,12 @@
     {
         StateHasChanged();
     }
-    
+
+
+    private async Task<string> GetUserName(ClaimsPrincipal user)
+    {
+        var u = await UserManager.GetUserAsync(user);
+        return u.FirstName;
+    }
+
 }
