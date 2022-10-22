@@ -12,85 +12,64 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 
-<EditForm Model="@_registerModel" OnValidSubmit="@OnValidSubmit">
+<EditForm Model="@_registerModel" OnValidSubmit="@TryToRegister">
     <DataAnnotationsValidator/>
 
+    <div class="d-flex flex-column align-items-center my-5">
+        <div class="row justify-content-center gy-5">
+            <div class="col-auto login-form">
+                <h2>Create account</h2>
+                <InputText class="form-input login-input" id="first-name" @bind-Value="_registerModel.FirstName" placeholder="First name"/>
+                <div class="align-self-center mx-auto">
+                    <ValidationMessage For="@(() => _registerModel.FirstName)"/>
+                </div>
+                <InputText class="form-input login-input" id="last-name" @bind-Value="_registerModel.LastName" placeholder="Last name"/>
+                <div class="align-self-center mx-auto">
+                    <ValidationMessage For="@(() => _registerModel.LastName)"/>
+                </div>
+                <InputText class="form-input login-input" id="email" @bind-Value="_registerModel.Email" placeholder="Email"/>
+                <div class="align-self-center mx-auto">
+                    <ValidationMessage For="@(() => _registerModel.Email)"/>
+                </div>
+                <InputText class="form-input login-input" id="password" @bind-Value="_registerModel.Password" type="password" placeholder="Password"/>
+                <div class="align-self-center mx-auto">
+                    <ValidationMessage For="@(() => _registerModel.Password)"/>
+                </div>
+                <InputText class="form-input login-input" id="confirm-password" @bind-Value="_registerModel.ConfirmPassword" type="password" placeholder="Confirm password"/>
+                <div class="align-self-center mx-auto">
+                    <ValidationMessage For="@(() => _registerModel.ConfirmPassword)"/>
+                </div>
 
-    <div class="row content">
-        <div class="col-md-2">
-            <label for="first-name">First Name</label>
-        </div>
-        <div class="col-md-3">
-            <InputText id="first-name" @bind-Value="_registerModel.FirstName"/>
-        </div>
-        <div class="col-md-5">
-            <ValidationMessage For="@(() => _registerModel.FirstName)"/>
-        </div>
-    </div>
-    <div class="row content">
-        <div class="col-md-2">
-            <label for="last-name">Last Name</label>
-        </div>
-        <div class="col-md-3">
-            <InputText id="last-name" @bind-Value="_registerModel.LastName"/>
-        </div>
-        <div class="col-md-5">
-            <ValidationMessage For="@(() => _registerModel.LastName)"/>
+                @if (string.IsNullOrWhiteSpace(_errorMessage) == false)
+                {
+                    <div class="validation-message">@_errorMessage</div>
+                }
+                <button class="form-confirm-btn login-btn" type="submit">CreateAccount</button>
+                <div>
+                    <small>Have an account? <a class="nav-link login-nav-link" href="@LoginUrl">Login</a></small>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="row content">
-        <div class="col-md-2">
-            <label for="email">Email</label>
-        </div>
-        <div class="col-md-3">
-            <InputText id="email" @bind-Value="_registerModel.Email"/>
-        </div>
-        <div class="col-md-5">
-            <ValidationMessage For="@(() => _registerModel.Email)"/>
-        </div>
-    </div>
-    <div class="row content">
-        <div class="col-md-2">
-            <label for="password">Password</label>
-        </div>
-        <div class="col-md-3">
-            <InputText id="password" @bind-Value="_registerModel.Password"/>
-        </div>
-        <div class="col-md-5">
-            <ValidationMessage For="@(() => _registerModel.Password)"/>
-        </div>
-    </div>
-    <div class="row content">
-        <div class="col-md-2">
-            <label for="confirm-password">Confirrm Password</label>
-        </div>
-        <div class="col-md-3">
-            <InputText id="confirm-password" @bind-Value="_registerModel.ConfirmPassword"/>
-        </div>
-        <div class="col-md-5">
-            <ValidationMessage For="@(() => _registerModel.ConfirmPassword)"/>
-        </div>
-    </div>
-    <button type="submit">Create account</button>
-
 </EditForm>
 
 @code {
 
-    private RegisterModel _registerModel = new();
+    private readonly RegisterModel _registerModel = new();
+        private const string LoginUrl = "/login";
+    private string _errorMessage = "";
 
-
-    private async Task OnValidSubmit()
+    private async Task TryToRegister()
     {
-        await RegisterUser();
+        _errorMessage = "";
+        
         var user = await UserManager.FindByEmailAsync(_registerModel.Email);
-        if (user is null)
-            return;
-
-        if (await SignInManager.CanSignInAsync(user))
+        if (user is not null)
         {
-            var key = Guid.NewGuid();
+            _errorMessage = "Email is already taken";
+            return;
         }
+        await RegisterUser();
     }
 
     private async Task RegisterUser()
@@ -109,9 +88,9 @@
 
         if (result.Succeeded)
         {
-    // TODO: add callback url
-            var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+    // TODO: add confirm registration url
+            // var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+            // code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
     // HACK: no mailing system as of now, all accounts will be auto confirmed
             await emailStore.SetEmailConfirmedAsync(user, true, CancellationToken.None);

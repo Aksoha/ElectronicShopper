@@ -14,21 +14,21 @@
 <EditForm Model="@_loginModel" OnValidSubmit="Authenticate">
     <DataAnnotationsValidator/>
 
-    <div class="d-flex flex-column align-items-center just my-5">
+    <div class="d-flex flex-column align-items-center my-5">
         <div class="row justify-content-center gy-5">
             <div class="col-auto login-form">
-                <h2 class="login-text">Login</h2>
+                <h2>Login</h2>
                 <InputText class="form-input login-input" id="email" @bind-Value="_loginModel.Email" placeholder="Email"/>
-                <div class="align-self-center">
+                <div class="align-self-center mx-auto">
                     <ValidationMessage For="@(() => _loginModel.Email)"/>
                 </div>
                 <InputText class="form-input login-input" id="password" @bind-Value="_loginModel.Password" type="password" placeholder="Password"/>
-                <div class="align-self-center">
+                <div class="align-self-center mx-auto">
                     <ValidationMessage For="@(() => _loginModel.Password)"/>
                 </div>
                 <a class="nav-link login-nav-link" href="@ForgotPasswordUrl">Forgot Password</a>
-                <label for="remember-me">Remember me</label>
                 <input id="remember-me" type="checkbox" checked="@_loginModel.RememberMe">
+                <label for="remember-me">Remember me</label>
                 @if (string.IsNullOrWhiteSpace(_errorMessage) == false)
                 {
                     <div class="validation-message">@_errorMessage</div>
@@ -37,7 +37,7 @@
             </div>
             <div class="col-auto">
                 <h2>Do not have an account?</h2>
-                <button type="submit" class="form-confirm-btn login-btn" onclick="@(() => NavManager.NavigateTo("/register"))">Register</button>
+                <button class="form-confirm-btn login-btn" onclick="@(() => NavManager.NavigateTo("/register"))">Register</button>
             </div>
         </div>
     </div>

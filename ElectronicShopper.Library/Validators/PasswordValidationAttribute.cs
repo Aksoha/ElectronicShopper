@@ -9,7 +9,7 @@ public class PasswordValidationAttribute : ValidationAttribute
     public PasswordValidationAttribute()
     {
         ErrorMessage =
-            "Password must contain an uppercase character, lowercase character, a digit, and a non-alphanumeric character and at least 8 characters long.";
+            "Password must contain an uppercase character, lowercase character, a digit, and a non-alphanumeric character and be at least 8 characters long.";
     }
 
     public override bool IsValid(object? value)
