@@ -46,9 +46,21 @@
 @code {
     private readonly LoginModel _loginModel = new() { RememberMe = true };
         private const string ForgotPasswordUrl = "/register";
-
-
     private string _errorMessage = "";
+
+    [CascadingParameter]
+    protected Task<AuthenticationState> AuthState { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+      await base.OnInitializedAsync();
+        var user = (await AuthState).User;
+        if (user.Identity is not null && user.Identity.IsAuthenticated)
+        {
+            NavManager.NavigateTo("/");
+        }
+    }
+
 
     private async Task Authenticate()
     {

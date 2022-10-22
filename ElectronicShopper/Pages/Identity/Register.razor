@@ -1,7 +1,5 @@
 ﻿@page "/register"
 @using Microsoft.AspNetCore.Identity
-@using Microsoft.AspNetCore.WebUtilities
-@using System.Text
 @using ElectronicShopper.DataAccess.Identity
 @using ElectronicShopper.Library
 @using ElectronicShopper.Library.Models
@@ -10,7 +8,6 @@
 @* @inject IUserEmailStore<IdentityUser> EmailStore *@
 @inject IUserStore<ApplicationUser> UserStore
 @inject UserManager<ApplicationUser> UserManager
-@inject SignInManager<ApplicationUser> SignInManager
 
 <EditForm Model="@_registerModel" OnValidSubmit="@TryToRegister">
     <DataAnnotationsValidator/>
@@ -59,6 +56,19 @@
         private const string LoginUrl = "/login";
     private string _errorMessage = "";
 
+    [CascadingParameter]
+    protected Task<AuthenticationState> AuthState { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var user = (await AuthState).User;
+        if (user.Identity is not null && user.Identity.IsAuthenticated)
+        {
+            NavManager.NavigateTo("/");
+        }
+    }
+    
     private async Task TryToRegister()
     {
         _errorMessage = "";
