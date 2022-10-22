@@ -1,11 +1,13 @@
 ﻿@page "/login"
-@page "/login/{errorMessage}"
 @using System.Security.Authentication
+@using ElectronicShopper.DataAccess.Identity
 @using ElectronicShopper.Library
 @using ElectronicShopper.Library.Models
 @using Microsoft.AspNetCore.Identity
 @using AuthorizationMiddleware = ElectronicShopper.Middleware.AuthorizationMiddleware
 @inject Navigation NavManager
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
 
 <PageTitle>Login</PageTitle>
 
@@ -27,9 +29,9 @@
                 <a class="nav-link login-nav-link" href="@ForgotPasswordUrl">Forgot Password</a>
                 <label for="remember-me">Remember me</label>
                 <input id="remember-me" type="checkbox" checked="@_loginModel.RememberMe">
-                @if (string.IsNullOrWhiteSpace(ErrorMessage) == false)
+                @if (string.IsNullOrWhiteSpace(_errorMessage) == false)
                 {
-                    <div class="validation-message">@ErrorMessage</div>
+                    <div class="validation-message">@_errorMessage</div>
                 }
                 <button class="form-confirm-btn login-btn" type="submit">Login</button>
             </div>
@@ -44,13 +46,40 @@
 @code {
     private readonly LoginModel _loginModel = new() { RememberMe = true };
         private const string ForgotPasswordUrl = "/register";
-    
-    [Parameter]
-    [SupplyParameterFromQuery(Name = "errorMessage")]
-    public string ErrorMessage { get; set; } = "";
 
-    private void Authenticate()
+
+    private string _errorMessage = "";
+
+    private async Task Authenticate()
     {
-        AuthorizationMiddleware.RequestLogin(_loginModel, NavManager);
+        _errorMessage = "";
+        
+         var user = await UserManager.FindByEmailAsync(_loginModel.Email);
+        if (user is null)
+        {
+            _errorMessage = "Incorrect email and/or password";
+            return;
+        }
+
+        if (await SignInManager.CanSignInAsync(user))
+        {
+            var result = await SignInManager.CheckPasswordSignInAsync(user, _loginModel.Password, false);
+            if (result.Succeeded)
+            {
+                AuthorizationMiddleware.RequestLogin(_loginModel, NavManager);
+            }
+            else if (result.IsLockedOut)
+            {
+                _errorMessage = "Your account has been blocked";
+            }
+            else if (result.RequiresTwoFactor)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                _errorMessage = "Incorrect email and/or password";
+            }
+        }
     }
 }
