@@ -16,14 +16,7 @@ public class Navigation : IDisposable
         _history = new List<string>(HistorySize) { _navigationManager.Uri };
         _navigationManager.LocationChanged += OnLocationChanged;
     }
-
-    public void NavigateToLogin()
-    {
-        var returnUrl = _history[^1];
-
-        _navigationManager.NavigateTo($"Identity/Account/Login?returnUrl={returnUrl}", 
-            forceLoad:true);
-    }
+    
     public void NavigateTo(string url, bool forceLoad = false)
     {
         _navigationManager.NavigateTo(url, forceLoad);

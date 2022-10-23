@@ -1,10 +1,10 @@
-﻿@inject ICartService CartService
-@inject Navigation NavManager
-@using ElectronicShopper.Library
+﻿@using ElectronicShopper.Library
 @using Microsoft.AspNetCore.Identity
 @using ElectronicShopper.DataAccess.Identity
 @using System.Security.Claims
 @implements IDisposable
+@inject ICartService CartService
+@inject Navigation NavManager
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 
@@ -14,8 +14,8 @@
         @* <LoginDisplay/> *@
         <AuthorizeView>
             <Authorized>
-                @UserManager.GetUserAsync(context.User).Result.FirstName
-                <div class="profile-link" onclick="@(() => NavManager.NavigateTo("/logout", true))">Logout</div>
+                <span>@UserManager.GetUserAsync(context.User).Result.FirstName</span>
+                <span class="profile-link" onclick="@(() => NavManager.NavigateTo("/logout", true))">Logout</span>
             </Authorized>
             <NotAuthorized>
                 <div class="profile-link" @onclick="@(() => NavManager.NavigateTo("/login"))">Login</div>
@@ -40,7 +40,7 @@
 
     protected override Task OnInitializedAsync()
     {
-        CartService.OnChange += UpdateCartIcon;
+        CartService.CartCountChange += UpdateCartIcon;
         return Task.CompletedTask;
     }
 
@@ -51,13 +51,14 @@
 
     public void Dispose()
     {
-        CartService.OnChange -= UpdateCartIcon;
+        CartService.CartCountChange -= UpdateCartIcon;
     }
 
 
     private void UpdateCartIcon()
     {
-        StateHasChanged();
+
+        InvokeAsync(StateHasChanged);
     }
 
 
