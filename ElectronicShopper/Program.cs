@@ -1,3 +1,4 @@
+using Blazored.LocalStorage;
 using ElectronicShopper.DataAccess.DependencyInjection;
 using ElectronicShopper.DataAccess.Identity;
 using ElectronicShopper.Library;
@@ -21,10 +22,12 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddDatabaseService();
 builder.Services.AddScoped<Navigation>();
+builder.Services.AddScoped<ICartService, CartService>();
 
 
 var app = builder.Build();
