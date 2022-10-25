@@ -1,0 +1,90 @@
+﻿@page "/cart"
+@using ElectronicShopper.Library.Models
+@inject ICartService CartService
+@inject NavigationManager NavManager
+@implements IDisposable
+@attribute [Authorize]
+
+
+<div class="container">
+    <div class="row g-5">
+
+
+        <div class="col-md-10 col-sm-12 cart-summary">
+            @foreach (var item in CartService)
+            {
+                <div class="row cart-summary-item align-items-center p-2">
+                    <div class="col-md-2 col-sm-12 text-center">
+                        <img class="cart-summary-item-img" src="@(item.Image ?? "./images/missing-image.png")" alt="product image"/>
+                    </div>
+                    <div class="col-lg-6 col-md-10 col-sm-12 text-sm-center text-md-center cart-summary-item-name" onclick="@(() => GoToProduct(item))">
+                        @item.ProductName
+                    </div>
+                    <div class="col-lg-auto col-sm-12 ms-auto text-sm-center text-md-center text-lg-center">
+                        @((item.Quantity * item.PricePerItem).ToString("c"))
+                        <input class="form-input cart-summary-item-count text-center" type="number" @bind-value="@item.Quantity" min="1">
+                        <div class="d-inline" onclick="@(() => RemoveItemFromCart(item))">
+                            <img class="cart-summary-item-remove" src="./images/Trash-can.png" alt="remove item"/>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="col-md-2 col-sm-12">
+            <div class="row">
+                <div class="cart-checkout">
+                    <div class="d-inline">Total price</div>
+                    <div class="d-inline">@CartService.TotalPrice.ToString("C")</div>
+                    <div>
+                        <button class="btn btn-primary cart-checkout-btn" disabled="@(CartService.Count <= 0)" onclick="@Checkout">Checkout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+    protected override Task OnInitializedAsync()
+    {
+        CartService.CartCountChange += UpdatePage;
+        return Task.CompletedTask;
+    }
+
+    private void RemoveItemFromCart(OrderDetailModel item)
+    {
+        CartService.Remove(item);
+    }
+
+    private void Checkout()
+    {
+        CartService.Checkout();
+        NavManager.NavigateTo("/order-confirmation");
+    }
+
+    private void GoToProduct(OrderDetailModel item)
+    {
+        NavManager.NavigateTo($"/p/{item.ProductId}");
+    }
+
+    
+    /// <summary>
+    /// Re-renders component whenever cart item changes.
+    /// </summary>
+    /// <remarks>
+    /// Calling this method is required due to problems with fetching data from CartService.
+    /// Refreshed page did not display cart items despite them being in the cart.
+    /// </remarks>
+    private void UpdatePage()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        CartService.CartCountChange -= UpdatePage;
+    }
+
+}

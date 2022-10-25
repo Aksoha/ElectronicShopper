@@ -124,3 +124,7 @@ a, .btn-link {
     margin: 20px;
 
 }
+
+.btn {
+    border-radius: 25px; 
+}
