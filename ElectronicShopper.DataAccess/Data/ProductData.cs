@@ -18,6 +18,17 @@ public class ProductData : IProductData
         _mapper = mapper;
     }
 
+    public async Task<ProductModel?> GetProduct(int id)
+    {
+        _sql.StartTransaction(ConnectionStringName);
+        var result = await _sql.LoadData<ProductDbModel, dynamic>("dbo.spProduct_Get", new {Id = id});
+        _sql.CommitTransaction();
+        
+        var output = _mapper.Map<ProductModel?>(result.SingleOrDefault());
+        return output;
+    }
+    
+
     public async Task<List<ProductModel>> GetProducts()
     {
         _sql.StartTransaction(ConnectionStringName);

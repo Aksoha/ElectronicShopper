@@ -90,6 +90,7 @@
      <Build Include="dbo\Stored Procedures\Product\spProductTemplate_GetAll.sql" />
      <Build Include="dbo\Stored Procedures\Product\spProductTemplate_GetById.sql" />
      <Build Include="dbo\Stored Procedures\Category\spCategory_GetRoot.sql" />
+     <Build Include="dbo\Stored Procedures\Product\spProduct_Get.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ElectronicShopperData.publish.xml" />
