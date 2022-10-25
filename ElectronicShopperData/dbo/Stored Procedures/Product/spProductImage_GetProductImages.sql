@@ -5,7 +5,7 @@ AS
 BEGIN
 	SET NOCOUNT ON
 
-	SELECT Id, ProductId, [Path]
+	SELECT Id, ProductId, [Path], IsPrimary
 	FROM ProductImage
 	WHERE ProductId = @ProductId
 
