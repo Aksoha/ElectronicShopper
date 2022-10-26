@@ -1,0 +1,140 @@
+﻿@page "/p/{Id:int}"
+@using ElectronicShopper.DataAccess.Data
+@using ElectronicShopper.Library
+@using ElectronicShopper.Library.Models
+@inject ICartService CartService
+@inject IProductData ProductData
+@inject Navigation NavManager
+
+@if (_product is not null)
+{
+    <PageTitle>@_product.ProductName</PageTitle>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <!-- images -->
+            <div class="col-md-12 col-lg-8">
+                <div class="row justify-content-center">
+                    <img class="product-img-preview" src="@_previewImage" alt="product image"/>
+                </div>
+
+                <div class="row justify-content-center">
+
+                    @foreach (var img in _images)
+                    {
+                        <img class="d-inline product-img-miniature m-2" src="@img" alt="product image"
+                             onmouseover="@(() => ImageMouseOver(img))"
+                             onmouseout="@ImageMouseOut"
+                             onclick="@(() => ImageMouseClick(img))">
+                    }
+                </div>
+            </div>
+
+            <!-- add to cart -->
+            <div class="col-md-12 col-lg-4">
+                <h2>@_product.ProductName</h2>
+                <div class="row">
+                    <div class="col-auto">
+                        <input class="form-input product-purchase-count mx-auto" type="number" min="1" @bind-value="_order.Quantity"/>
+                    </div>
+                    <div class="col-auto ms-auto align-self-center">
+                        <div class="text-end">@_product.RetailPrice.ToString("c")</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <button class="btn btn-primary w-100" @onclick="@(AddToCart)">Add to Cart</button>
+                </div>
+
+
+            </div>
+        </div>
+        
+        <!-- Specs -->
+        <h2 class="section-divider">Specification</h2>
+        <table class="table table-striped table-hover">
+            <tbody>
+            @foreach (var property in _product.Properties)
+            {
+                <tr>
+                    <td>
+                        @property.Key
+                    </td>
+                    <td>
+                        @foreach (var propertyVal in property.Value)
+                        {
+                            <div>
+                                @propertyVal
+                            </div>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+
+
+@code {
+    
+    [Parameter]
+    public int Id { get; set; }
+
+    private ProductModel? _product;
+    private readonly OrderDetailModel _order = new();
+    private List<string> _images = new();
+    private string _selectedImage = "";
+    private string _previewImage = "";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var p = await ProductData.GetProduct(Id);
+        if (p is not null)
+        {
+            _product = p;
+            var productImages = await ProductData.GetProductImages(_product);
+
+            var primaryImg = productImages.SingleOrDefault(x => x.IsPrimary);
+            _selectedImage = primaryImg is not null ? primaryImg.Path : productImages[0].Path;
+
+            _images = productImages.Select(image => image.Path).ToList();
+            _order.Quantity = 1;
+            _order.ProductId = _product.Id;
+            _order.ProductName = _product.ProductName;
+            _order.PricePerItem = _product.RetailPrice;
+
+            _previewImage = _selectedImage;
+        }
+        else
+        {
+            NavManager.NavigateTo("/");
+        }
+    }
+
+    private void AddToCart()
+    {
+        CartService.Add(_order);
+    }
+
+    private void ImageMouseOver(string image)
+    {
+        _previewImage = image;
+        StateHasChanged();
+    }
+
+    private void ImageMouseOut()
+    {
+        _previewImage = _selectedImage;
+        StateHasChanged();
+    }
+
+    private void ImageMouseClick(string image)
+    {
+        _selectedImage = image;
+        _previewImage = image;
+        StateHasChanged();
+    }
+
+}
