@@ -11,12 +11,12 @@
 
 <PageTitle>Login</PageTitle>
 
-<EditForm Model="@_loginModel" OnValidSubmit="Authenticate">
-    <DataAnnotationsValidator/>
 
     <div class="d-flex flex-column align-items-center my-5">
         <div class="row justify-content-center gy-5">
-            <div class="col-auto login-form">
+            <EditForm Model="@_loginModel" OnValidSubmit="Authenticate"  class="col-auto login-form">
+                <DataAnnotationsValidator/>
+   
                 <h2>Login</h2>
                 <InputText class="form-input login-input" id="email" @bind-Value="_loginModel.Email" placeholder="Email"/>
                 <div class="align-self-center mx-auto">
@@ -34,14 +34,13 @@
                     <div class="validation-message">@_errorMessage</div>
                 }
                 <button class="form-confirm-btn login-btn" type="submit">Login</button>
-            </div>
+            </EditForm>
             <div class="col-auto">
                 <h2>Do not have an account?</h2>
                 <button class="form-confirm-btn login-btn" onclick="@(() => NavManager.NavigateTo("/register"))">Register</button>
             </div>
         </div>
     </div>
-</EditForm>
 
 @code {
     private readonly LoginModel _loginModel = new() { RememberMe = true };
