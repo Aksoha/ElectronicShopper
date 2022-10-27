@@ -19,8 +19,9 @@
     width: 100%;
 }
 
-.cart-summary-item-count {
+::deep .cart-summary-item-count {
     width: 60px;
+
 }
 
 .cart-summary-item-remove {
@@ -47,5 +48,10 @@
     
     .cart-checkout-btn {
         width: 100%;
+    }
+    
+    ::deep .cart-summary-item-count {
+        margin-left: 16px;
+        margin-right: 8px;
     }
 }

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
 
 namespace ElectronicShopper.Library.Models;
@@ -10,6 +11,7 @@ public class OrderDetailModel : INotifyPropertyChanged
     public string ProductName { get; set; } = string.Empty;
     public string? Image { get; set; }
 
+    [Range(0, double.PositiveInfinity)]
     public int Quantity
     {
         get => _quantity;

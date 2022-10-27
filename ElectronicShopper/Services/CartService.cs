@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using Blazored.LocalStorage;
 using ElectronicShopper.DataAccess.Data;
 using ElectronicShopper.DataAccess.Identity;
@@ -11,7 +12,9 @@ namespace ElectronicShopper.Services;
 public class CartService : ICartService
 {
     public event Action? CartCountChange;
-    private List<OrderDetailModel> _products = new();
+    
+    [ValidateComplexType]
+    private List<OrderDetailModel> Products { get; set; } = new();
     private readonly IOrderData _orderData;
     private readonly IHttpContextAccessor _accessor;
     private readonly ApplicationUserManager _userManager;
@@ -30,20 +33,20 @@ public class CartService : ICartService
     }
 
     public bool IsReadOnly => false;
-    public int Count => _products.Sum(x => x.Quantity);
-    public decimal TotalPrice => _products.Sum(x => x.PricePerItem * x.Quantity);
+    public int Count => Products.Sum(x => x.Quantity);
+    public decimal TotalPrice => Products.Sum(x => x.PricePerItem * x.Quantity);
 
 
     public void Add(OrderDetailModel item)
     {
-        var existingItem = _products.SingleOrDefault(x => x.ProductId == item.ProductId);
+        var existingItem = Products.SingleOrDefault(x => x.ProductId == item.ProductId);
         if (existingItem is not null)
         {
             existingItem.Quantity += item.Quantity;
         }
         else
         {
-            _products.Add(item);
+            Products.Add(item);
             item.PropertyChanged += ProductChanged;
         }
 
@@ -53,7 +56,7 @@ public class CartService : ICartService
 
     public bool Remove(OrderDetailModel item)
     {
-        var result = _products.Remove(item);
+        var result = Products.Remove(item);
         item.PropertyChanged -= ProductChanged;
         Task.Run(SetCache);
         CartCountChange?.Invoke();
@@ -69,7 +72,7 @@ public class CartService : ICartService
         var order = new OrderModel
         {
             UserId = loggedUser.Id,
-            PurchasedProducts = _products
+            PurchasedProducts = Products
         };
 
         await _orderData.AddOrder(order);
@@ -82,25 +85,25 @@ public class CartService : ICartService
     public void Clear()
     {
         UnsubscribeFromProductEvent();
-        _products.Clear();
+        Products.Clear();
         Task.Run(SetCache);
         CartCountChange?.Invoke();
     }
 
     public bool Contains(OrderDetailModel item)
     {
-        return _products.Contains(item);
+        return Products.Contains(item);
     }
 
     public void CopyTo(OrderDetailModel[] array, int arrayIndex)
     {
-        _products.CopyTo(array, arrayIndex);
+        Products.CopyTo(array, arrayIndex);
     }
 
 
     public IEnumerator<OrderDetailModel> GetEnumerator()
     {
-        return _products.GetEnumerator();
+        return Products.GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()
@@ -116,7 +119,7 @@ public class CartService : ICartService
 
     private void UnsubscribeFromProductEvent()
     {
-        foreach (var product in _products)
+        foreach (var product in Products)
         {
             product.PropertyChanged -= ProductChanged;
         }
@@ -127,10 +130,10 @@ public class CartService : ICartService
         var cacheDate = await _localStorage.GetItemAsync<DateTime?>(CartCacheTime);
         if (cacheDate is not null && DateTime.UtcNow < ((DateTime)cacheDate).AddDays(7))
         {
-            _products = await _localStorage.GetItemAsync<List<OrderDetailModel>>(CartCacheName);
+            Products = await _localStorage.GetItemAsync<List<OrderDetailModel>>(CartCacheName);
         }
 
-        foreach (var product in _products)
+        foreach (var product in Products)
         {
             product.PropertyChanged += ProductChanged;
         }
@@ -140,7 +143,7 @@ public class CartService : ICartService
 
     private async Task SetCache()
     {
-        await _localStorage.SetItemAsync(CartCacheName, _products);
+        await _localStorage.SetItemAsync(CartCacheName, Products);
         await _localStorage.SetItemAsync(CartCacheTime, DateTime.UtcNow);
     }
 
