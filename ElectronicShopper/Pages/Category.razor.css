@@ -1,0 +1,46 @@
+﻿.product-card {
+
+    border-bottom: #8b8b8b solid 1px;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.product-card:hover {
+    border: #8b8b8b solid 1px;
+    border-radius: 25px;
+    transition: 0.1s;
+}
+
+.product-card-image {
+
+    border-radius: 25px;
+    max-height: 100%;
+    width: auto;
+    margin: auto;
+}
+
+.product-card-btn {
+    z-index: 10;
+    background-color: transparent;
+    border: none;
+    height: 50px;
+    width: auto;
+    cursor: pointer;
+}
+
+.product-card-btn:hover {
+    transform: scale(1.1);
+    transition: 0.1s;
+}
+
+.filter-green {
+    filter: invert(62%) sepia(64%) saturate(4945%) hue-rotate(110deg) brightness(98%) contrast(83%);
+}
+
+.sort-items {
+    width: auto;
+}
+
+.price-slider {
+    width: 100%;
+}

@@ -1,0 +1,158 @@
+﻿@page "/c/{Id:int}"
+@using ElectronicShopper.Library.Models
+@using ElectronicShopper.DataAccess.Data
+@using ElectronicShopper.Library
+@using System.ComponentModel.DataAnnotations
+@using ElectronicShopper.Extensions.System
+@inject IProductData ProductData
+@inject Navigation NavManager
+@inject ICartService CartService
+
+<div class="container-fluid">
+    @if (_products is not null)
+    {
+        <div class="row">
+            <!-- Filters -->
+            <div class="col-md-12 col-lg-2">
+                <div class="row">
+                    <div class="col-4">
+                        <small>@_products.MinBy(x => x.RetailPrice)?.RetailPrice.ToString("c")</small>
+                    </div>
+                    <div class="col-4">
+                        <small>@_priceThreshold.ToString("c")</small>
+                    </div>
+                    <div class="col-4">
+                        <small>@_products.MaxBy(x => x.RetailPrice)?.RetailPrice.ToString("c")</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <input class="price-slider" type="range" min="@_products.MinBy(x => x.RetailPrice)?.RetailPrice" max="@_products.MaxBy(x => x.RetailPrice)?.RetailPrice"
+                           @bind="_priceThreshold" @bind:event="oninput" onchange="@FilterProductPrice"/>
+                </div>
+
+            </div>
+
+            <div class="col-md-12 col-lg-10">
+                <!-- Sort -->
+                <div class="row">
+                    <select class="sort-items" @bind-value="_selectedSortMethod" @onchange="SortProducts" @bind-value:event="oninput">
+                        @foreach (ProductSort item in Enum.GetValues(typeof(ProductSort)))
+                        {
+                            <option value="@item">@item.GetEnumDisplayName()</option>
+                        }
+                    </select>
+                </div>
+                <!-- Product cards -->
+                <div class="row">
+                    @foreach (var product in _filteredProducts)
+                    {
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-2 py-2" onclick="@(() => GoToProduct(product))">
+                            <div class="product-card">
+                                <div class="row justify-content-center">
+                                    <img class="product-card-image" src="@GetProductImage(product)" alt="product image"/>
+                                </div>
+                                <div class="row">
+                                    <h5 class="text-center">@product.ProductName</h5>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6 align-self-center">
+                                        @product.RetailPrice.ToString("c")
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <img class="product-card-btn filter-green" src="./images/Add-to-cart.svg" alt="add to cart"
+                                             @onclick:stopPropagation="true" onclick="@(() => AddToCart(product))">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    IEnumerable<ProductModel>? _products;
+    IEnumerable<ProductModel> _filteredProducts = null!;
+
+    private enum ProductSort
+    {
+        [Display(Name = "Price ascending")] PriceAscending,
+        [Display(Name = "Price descending")] PriceDescending,
+        [Display(Name = "Name ascending")] NameAscending,
+        [Display(Name = "Name descending")] NameDescending
+    }
+
+
+    private ProductSort _selectedSortMethod;
+    private decimal _priceThreshold;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var products = await ProductData.GetProducts();
+
+
+        _products = from item in products
+            where item.Category.Id == Id || item.Category.Ancestors.Any(i => i.Id == Id)
+            select item;
+
+        var filteredProducts = _products.ToList();
+        _filteredProducts = filteredProducts;
+
+        if(filteredProducts.Count == 0)
+            return;
+        
+        _selectedSortMethod = ProductSort.NameAscending;
+        _priceThreshold = filteredProducts.MaxBy(x => x.RetailPrice)!.RetailPrice;
+        FilterProductPrice();
+    }
+
+    private void GoToProduct(ProductModel item)
+    {
+        NavManager.NavigateTo($"/p/{item.Id}");
+    }
+
+    private void AddToCart(ProductModel item)
+    {
+        var order = new OrderDetailModel
+        {
+            Quantity = 1,
+            ProductId = item.Id,
+            PricePerItem = item.RetailPrice,
+            ProductName = item.ProductName
+        };
+
+        CartService.Add(order);
+    }
+
+    private string GetProductImage(ProductModel item)
+    {
+        var image = item.Images.SingleOrDefault(x => x.IsPrimary);
+        return image is null ? "./images/missing-image.png" : image.Path;
+    }
+
+
+    private void SortProducts()
+    {
+        _filteredProducts = _selectedSortMethod switch
+        {
+            ProductSort.NameAscending => _filteredProducts.OrderBy(x => x.ProductName),
+            ProductSort.NameDescending => _filteredProducts.OrderByDescending(x => x.ProductName),
+            ProductSort.PriceAscending => _filteredProducts.OrderBy(x => x.RetailPrice).ToList(),
+            ProductSort.PriceDescending => _filteredProducts.OrderByDescending(x => x.RetailPrice),
+            _ => _filteredProducts
+            };
+    }
+
+    private void FilterProductPrice()
+    {
+        _filteredProducts = _products!.Where(x => x.RetailPrice <= _priceThreshold);
+        SortProducts();
+    }
+
+}
