@@ -1,0 +1,17 @@
+﻿<div class="@HeaderCssClass" @onclick="Toggle">
+    @if (Collapsed)
+    {
+        <span class="oi oi-chevron-right mr-1"></span>
+    }
+    else
+    {
+        <span class="oi oi-chevron-bottom mr-1"></span>
+    }
+    @Title
+</div>
+@if (Collapsed is false)
+{
+    <div class="@ContentCssClass">
+        @ChildContent
+    </div>
+}
