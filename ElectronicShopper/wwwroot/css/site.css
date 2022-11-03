@@ -168,3 +168,38 @@ a, .btn-link {
     background-color: white;
     color: black;
 }
+
+.dropdown {
+    cursor: pointer;
+    border: black solid 1px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    max-height: 200px;
+    overflow: hidden;
+    overflow-y: auto;
+}
+
+.dropdown-header,
+.dropdown-header-placeholder {
+    display: block;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0;
+    font-size: .875rem;
+    color: #6c757d;
+    white-space: nowrap;
+}
+
+.dropdown-header {
+    font-size: 1rem;
+    color: black;
+}
+
+.dropdown-item {
+    background-color: white;
+}
+
+.dropdown-item:hover {
+    background-color: #8b8b8b;
+}

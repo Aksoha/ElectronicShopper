@@ -1,0 +1,31 @@
+﻿@typeparam T
+
+<div onmouseleave="@CollapseWithDelay">
+    <div class="@DropdownCssClass">
+        <div id="@HeaderId" onclick="@Toggle">
+            @if (string.IsNullOrEmpty(ConvertToString(Value)))
+            {
+                <div class="@DropdownHeaderPlaceholderCssClass">
+                    @Placeholder
+                </div>
+            }
+            else
+            {
+                <div class="@DropdownHeaderCssClass">
+                    @ConvertToString(Value)
+                </div>
+            }
+        </div>
+    </div>
+    @if (Expanded)
+    {
+        <div style="@DropdownItemInlineCss" class="@DropdownCssClass">
+            @foreach (var item in DataSource)
+            {
+                <div class="@DropdownItemCssClass" onclick="@(() => SetSelectedItem(item))" @onclick:stopPropagation="true">
+                    @ConvertToString(item)
+                </div>
+            }
+        </div>
+    }
+</div>
