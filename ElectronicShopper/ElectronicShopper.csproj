@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-ElectronicShopper-E36FFD81-273B-4884-ACF7-65CACF42DB29</UserSecretsId>
-    <FileVersion>1.0.0.18</FileVersion>
+    <FileVersion>1.0.0.19</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

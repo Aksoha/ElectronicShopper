@@ -2,6 +2,7 @@ using Blazored.LocalStorage;
 using ElectronicShopper.DataAccess.DependencyInjection;
 using ElectronicShopper.DataAccess.Identity;
 using ElectronicShopper.Library;
+using ElectronicShopper.Library.Settings;
 using ElectronicShopper.Middleware;
 using ElectronicShopper.Services;
 using Microsoft.AspNetCore.Identity;
@@ -29,8 +30,8 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddDatabaseService();
 builder.Services.AddScoped<Navigation>();
 builder.Services.AddScoped<ICartService, CartService>();
-
-
+builder.Services.Configure<ImageStorageSettings>(builder.Configuration.GetSection("Images"));
+builder.Services.Configure<ConnectionStringSettings>(builder.Configuration.GetSection("ConnectionStrings"));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -50,7 +51,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(builder.Configuration["Images"]),
+    FileProvider = new PhysicalFileProvider(builder.Configuration["Images:BasePath"]),
 });
 
 app.UseRouting();
