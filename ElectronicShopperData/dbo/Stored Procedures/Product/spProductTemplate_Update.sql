@@ -8,5 +8,6 @@ BEGIN
 
 	UPDATE ProductTemplate
 	SET Properties = @Properties, ModificationDate = GETUTCDATE()
-
+    WHERE Id = @Id
+    
 END
