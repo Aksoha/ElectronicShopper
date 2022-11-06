@@ -9,4 +9,6 @@ BEGIN
 	INSERT INTO Inventory(ProductId, QuantityAvailable, QuantityReserved)
 	VALUES (@ProductId, @QuantityAvailable, @QuantityReserved)
 
+    SELECT SCOPE_IDENTITY()
+    
 END

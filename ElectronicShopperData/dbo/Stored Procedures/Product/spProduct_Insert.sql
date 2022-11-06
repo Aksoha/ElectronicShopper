@@ -15,5 +15,7 @@ BEGIN
 	DECLARE @NewIdentity INT
 	SET @NewIdentity = SCOPE_IDENTITY()
 	EXECUTE spInventory_Insert @NewIdentity
+    
+    SELECT SCOPE_IDENTITY()
 
 END

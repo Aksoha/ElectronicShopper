@@ -10,4 +10,6 @@ BEGIN
 	INSERT INTO ProductImage(ProductId, [Path], IsPrimary)
 	VALUES (@ProductId, @Path, @IsPrimary)
 
+    SELECT SCOPE_IDENTITY()
+    
 END

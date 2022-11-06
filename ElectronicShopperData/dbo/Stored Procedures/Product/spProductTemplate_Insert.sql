@@ -8,4 +8,6 @@ BEGIN
 	INSERT INTO ProductTemplate(Properties)
 	VALUES (@Properties)
 
+    SELECT SCOPE_IDENTITY()
+    
 END
