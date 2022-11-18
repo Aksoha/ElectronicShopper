@@ -1,132 +1,309 @@
-using AutoMapper;
-using ElectronicShopper.DataAccess.Models.Internal;
+using ElectronicShopper.DataAccess.StoredProcedures.Inventory;
+using ElectronicShopper.DataAccess.StoredProcedures.Product;
+using ElectronicShopper.Library;
 using ElectronicShopper.Library.Models;
-using ElectronicShopper.Library.Settings;
-using Microsoft.Extensions.Options;
+using FluentValidation;
+using Microsoft.Data.SqlClient;
 
 namespace ElectronicShopper.DataAccess.Data;
 
 public class ProductData : IProductData
 {
-    private readonly ISqlDataAccess _sql;
     private readonly ICategoryData _categoryData;
-    private readonly IMapper _mapper;
     private readonly string _connectionString;
+    private readonly IFileSystem _fileSystem;
+    private readonly ImageStorageSettings _imageSettings;
+    private readonly IValidator<MemoryImageModel> _imageValidator;
+    private readonly IMapper _mapper;
+    private readonly IValidator<ProductInsertModel> _productValidator;
+    private readonly ISqlDataAccess _sql;
 
-    public ProductData(ISqlDataAccess sql, ICategoryData categoryData, IMapper mapper, IOptionsSnapshot<ConnectionStringSettings> settings)
+    public ProductData(ISqlDataAccess sql, IMapper mapper, ICategoryData categoryData,
+        IOptionsSnapshot<ConnectionStringSettings> settings, IOptionsSnapshot<ImageStorageSettings> imageSettings
+        , IFileSystem fileSystem, IValidator<ProductInsertModel> productValidator,
+        IValidator<MemoryImageModel> imageValidator)
     {
+        ArgumentNullException.ThrowIfNull(imageValidator);
+        ArgumentNullException.ThrowIfNull(productValidator);
+        ArgumentNullException.ThrowIfNull(fileSystem);
+        ArgumentNullException.ThrowIfNull(imageSettings);
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(categoryData);
+        ArgumentNullException.ThrowIfNull(mapper);
+        ArgumentNullException.ThrowIfNull(sql);
+
         _sql = sql;
-        _categoryData = categoryData;
         _mapper = mapper;
+        _categoryData = categoryData;
+        _fileSystem = fileSystem;
+        _productValidator = productValidator;
+        _imageValidator = imageValidator;
+        _imageSettings = imageSettings.Value;
         _connectionString = settings.Value.ElectronicShopperData;
     }
 
-    public async Task<ProductModel?> GetProduct(int id)
+    public async Task Create(ProductInsertModel product)
     {
-        _sql.StartTransaction(_connectionString);
-        var result = await _sql.LoadData<ProductDbModel, dynamic>("dbo.spProduct_Get", new { Id = id });
-        _sql.CommitTransaction();
+        await _productValidator.ValidateAndThrowAsync(product);
 
-        var output = _mapper.Map<ProductModel?>(result.SingleOrDefault());
+        var category = await _categoryData.Get((int)product.CategoryId!);
+        if (category is null)
+            throw new DatabaseException("Category is not present in the database");
+
+        if (product.Template is not null)
+            await CreateTemplate(product.Template);
+
+        var sp = _mapper.Map<ProductInsertStoredProcedure>(product);
+
+        try
+        {
+            _sql.StartTransaction(_connectionString);
+            var id = await _sql.SaveData<ProductInsertStoredProcedure, int>(sp);
+            _sql.CommitTransaction();
+            product.Id = id;
+        }
+        catch (SqlException)
+        {
+            _sql.RollbackTransaction();
+            throw;
+        }
+    }
+
+    public async Task CreateTemplate(ProductTemplateModel template)
+    {
+        var sp = _mapper.Map<ProductTemplateInsertStoredProcedure>(template);
+
+        try
+        {
+            _sql.StartTransaction(_connectionString);
+            var id = await _sql.SaveData<ProductTemplateInsertStoredProcedure, int>(sp);
+            _sql.CommitTransaction();
+            template.Id = id;
+        }
+        catch (SqlException)
+        {
+            _sql.RollbackTransaction();
+            throw;
+        }
+    }
+
+    public async Task CreateImage(ProductModel product, MemoryImageModel image)
+    {
+        await _imageValidator.ValidateAndThrowAsync(image);
+
+        var folderPath = $"{_imageSettings.Products}/{product.ProductName}";
+        var filePath = $"{folderPath}/{image.Name}{image.Extension}";
+        var sp = _mapper.Map<ProductImageInsertStoredProcedure>(product);
+        _mapper.Map(image, sp);
+        sp.Path = filePath;
+
+        folderPath = $"{_imageSettings.BasePath}{folderPath}";
+        filePath = $"{_imageSettings.BasePath}{filePath}";
+
+        try
+        {
+            _sql.StartTransaction(_connectionString);
+            var id = await _sql.SaveData<ProductImageInsertStoredProcedure, int>(sp);
+
+            if (_fileSystem.Exists(folderPath) == false)
+                _fileSystem.CreateDirectory(folderPath);
+            await _fileSystem.Save(filePath, image.Stream);
+            _sql.CommitTransaction();
+            image.Id = id;
+        }
+        catch (Exception)
+        {
+            _sql.RollbackTransaction();
+
+            if (_fileSystem.Exists(filePath))
+                _fileSystem.DeleteFile(filePath);
+
+            throw;
+        }
+    }
+
+    public async Task CreateInventory(int productId, InventoryModel inventory)
+    {
+        var sp = _mapper.Map<InventoryInsertStoredProcedure>(inventory);
+        sp.ProductId = productId;
+
+        try
+        {
+            _sql.StartTransaction(_connectionString);
+            var id = await _sql.SaveData<InventoryInsertStoredProcedure, int>(sp);
+            _sql.CommitTransaction();
+
+            inventory.Id = id;
+        }
+        catch (SqlException)
+        {
+            _sql.RollbackTransaction();
+            throw;
+        }
+    }
+
+    public async Task<ProductModel?> Get(int id)
+    {
+        var sp = new ProductGetStoredProcedure { Id = id };
+        ProductDbModel? result;
+
+        try
+        {
+            _sql.StartTransaction(_connectionString);
+            result = (await _sql.LoadData<ProductGetStoredProcedure, ProductDbModel>(sp)).FirstOrDefault();
+            _sql.CommitTransaction();
+        }
+        catch (SqlException)
+        {
+            _sql.RollbackTransaction();
+            throw;
+        }
+
+        if (result is null)
+            return null;
+
+        var output = _mapper.Map<ProductModel?>(result);
+
+
+        output!.Category = (await _categoryData.Get(result.CategoryId))!;
+        output.Images = await GetProductImages(output);
+        await SetInventory(output);
         return output;
     }
 
-
-    public async Task<List<ProductModel>> GetProducts()
+    public async Task<List<ProductModel>> GetAll()
     {
-        _sql.StartTransaction(_connectionString);
-        var result = await _sql.LoadData<ProductDbModel, dynamic>("dbo.spProduct_GetAll", null!);
-        _sql.CommitTransaction();
+        IEnumerable<ProductDbModel> result;
+        try
+        {
+            _sql.StartTransaction(_connectionString);
+            result =
+                await _sql.LoadData<ProductGetAllStoredProcedure, ProductDbModel>(new ProductGetAllStoredProcedure());
+            _sql.CommitTransaction();
+        }
+        catch (SqlException)
+        {
+            _sql.RollbackTransaction();
+            throw;
+        }
 
         var output = _mapper.Map<List<ProductModel>>(result);
 
         foreach (var item in output)
         {
-            var category = await _categoryData.GetById(item.Category.Id);
+            var category = await _categoryData.Get((int)item.Category.Id!);
             if (category is null)
                 throw new NullReferenceException(nameof(category));
 
             item.Category = category;
             item.Images = await GetProductImages(item);
+            await SetInventory(item);
         }
 
         return output;
     }
 
-    public async Task<List<ProductTemplateModel>> GetTemplates()
+    public async Task<ProductTemplateModel?> GetTemplate(int templateId)
     {
-        _sql.StartTransaction(_connectionString);
-        var result = await _sql.LoadData<ProductTemplateDbModel, dynamic>("dbo.spProductTemplate_GetAll", null!);
-        _sql.CommitTransaction();
+        var sp = new ProductTemplateGetByIdStoredProcedure { Id = templateId };
+        ProductTemplateDbModel? result;
+
+        try
+        {
+            _sql.StartTransaction(_connectionString);
+            result = (await _sql.LoadData<ProductTemplateGetByIdStoredProcedure, ProductTemplateDbModel>(sp))
+                .FirstOrDefault();
+            _sql.CommitTransaction();
+        }
+        catch (SqlException)
+        {
+            _sql.RollbackTransaction();
+            throw;
+        }
+
+        if (result is null)
+            return null;
+
+        var output = _mapper.Map<ProductTemplateModel>(result);
+        return output;
+    }
+
+    public async Task<List<ProductTemplateModel>> GetAllTemplates()
+    {
+        IEnumerable<ProductTemplateDbModel> result;
+        try
+        {
+            _sql.StartTransaction(_connectionString);
+            result = await _sql.LoadData<ProductTemplateGetAllStoredProcedure, ProductTemplateDbModel>(
+                new ProductTemplateGetAllStoredProcedure());
+            _sql.CommitTransaction();
+        }
+        catch (SqlException)
+        {
+            _sql.RollbackTransaction();
+            throw;
+        }
 
         var output = _mapper.Map<List<ProductTemplateModel>>(result);
 
         return output;
     }
 
-    public async Task<ProductTemplateModel?> GetTemplateById(int id)
-    {
-        _sql.StartTransaction(_connectionString);
-        var result =
-            await _sql.LoadData<ProductTemplateModel, dynamic>("dbo.spProductTemplate_GetById", new { Id = id });
-        _sql.CommitTransaction();
-
-        var output = _mapper.Map<ProductTemplateModel>(result.FirstOrDefault());
-        return output;
-    }
-
     public async Task<List<ProductImageModel>> GetProductImages(ProductModel product)
     {
-        _sql.StartTransaction(_connectionString);
-        var result =
-            await _sql.LoadData<ProductImageDbModel, dynamic>("spProduct_GetProductImages",
-                new { ProductId = product.Id });
-        _sql.CommitTransaction();
+        var sp = _mapper.Map<ProductGetProductImagesStoredProcedure>(product);
+        IEnumerable<ProductImageDbModel> result;
+        try
+        {
+            _sql.StartTransaction(_connectionString);
+            result = await _sql.LoadData<ProductGetProductImagesStoredProcedure, ProductImageDbModel>(sp);
+            _sql.CommitTransaction();
+        }
+        catch (SqlException)
+        {
+            _sql.RollbackTransaction();
+            throw;
+        }
 
         var output = _mapper.Map<List<ProductImageModel>>(result);
 
         return output;
     }
 
-    public async Task AddProduct(ProductModel product, ProductTemplateModel template)
+    public async Task UpdateInventory(ProductModel product, InventoryModel inventory)
     {
-        var templateExistsInDb = await GetTemplateById(template.Id) is not null;
+        ArgumentNullException.ThrowIfNull(product.Id);
 
-        if (templateExistsInDb == false)
-            await AddTemplate(template);
-        
-        var dbItem = _mapper.Map<ProductDbModel>(product);
-
-        _sql.StartTransaction(_connectionString);
-        var id = await _sql.SaveData<dynamic, int>("spProduct_Insert",
-            new
-            {
-                dbItem.CategoryId, template.Id, dbItem.RetailPrice, dbItem.ProductName, dbItem.Properties
-            });
-        _sql.CommitTransaction();
-
-        product.Id = id;
+        var sp = _mapper.Map<InventoryUpdateStoredProcedure>(inventory);
+        _mapper.Map(product, sp);
+        try
+        {
+            _sql.StartTransaction(_connectionString);
+            await _sql.SaveData(sp);
+            _sql.CommitTransaction();
+            product.Inventory = inventory;
+        }
+        catch (SqlException e)
+        {
+            _sql.RollbackTransaction();
+            if (e.Message == "Inventory table does not contain row with given product")
+                throw new DatabaseException("Inventory table does not contain row with given product");
+            throw;
+        }
     }
 
-    public async Task AddTemplate(ProductTemplateModel template)
+    /// <summary>
+    ///     Sets <see cref="ProductModel.Inventory" /> field of product.
+    /// </summary>
+    /// <param name="product">Product who's inventory is to be set.</param>
+    private async Task SetInventory(ProductModel product)
     {
-        var dbItem = _mapper.Map<ProductTemplateDbModel>(template);
-
+        var sp = _mapper.Map<InventoryGetByProductIdStoredProcedure>(product);
         _sql.StartTransaction(_connectionString);
-        var id = await _sql.SaveData<dynamic, int>("spProductTemplate_Insert", new { dbItem.Properties });
+        var result =
+            (await _sql.LoadData<InventoryGetByProductIdStoredProcedure, InventoryDbModel>(sp)).Single();
         _sql.CommitTransaction();
 
-        template.Id = id;
-    }
-
-    public async Task AddProductImage(ProductModel product, ProductImageModel image)
-    {
-        var dbItem = _mapper.Map<ProductImageDbModel>(image);
-        _sql.StartTransaction(_connectionString);
-        var id = await _sql.SaveData<dynamic, int>("spProductImage_Insert",
-            new { dbItem.ProductId, dbItem.Path, dbItem.IsPrimary });
-        _sql.CommitTransaction();
-
-        image.Id = id;
+        product.Inventory = _mapper.Map<InventoryModel>(result);
     }
 }

@@ -1,6 +1,0 @@
-﻿CREATE TABLE [dbo].[Order]
-(
-	[Id] INT NOT NULL PRIMARY KEY IDENTITY, 
-    [UserId] INT NOT NULL, 
-    [PurchaseTime] DATETIME2 NOT NULL DEFAULT GETUTCDATE(), 
-)

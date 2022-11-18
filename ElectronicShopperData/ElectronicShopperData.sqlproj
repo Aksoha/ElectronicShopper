@@ -56,43 +56,42 @@
   <Import Condition="'$(SQLDBExtensionsRefPath)' == ''" Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
   <ItemGroup>
     <Folder Include="Properties" />
-    <Folder Include="dbo" />
-    <Folder Include="dbo\Stored Procedures" />
-    <Folder Include="dbo\Tables" />
-    <Folder Include="dbo\Stored Procedures\Order" />
-  </ItemGroup>
-  <ItemGroup>
-    <Build Include="dbo\Tables\Category.sql" />
-    <Build Include="dbo\Tables\Inventory.sql" />
-    <Build Include="dbo\Tables\Product.sql" />
-    <Build Include="dbo\Tables\ProductImage.sql" />
-    <Build Include="dbo\Tables\Order.sql" />
-    <Build Include="dbo\Tables\OrderDetails.sql" />
-    <Build Include="dbo\Stored Procedures\Order\spOrderDetails_Insert.sql" />
-    <Build Include="dbo\Stored Procedures\Order\spOrder_Insert.sql" />
-    <Build Include="dbo\Stored Procedures\Product\spProductImage_Insert.sql" />
-    <Build Include="dbo\Stored Procedures\Product\spProductImage_GetProductImages.sql" />
-    <Build Include="dbo\Tables\ProductTemplate.sql" />
-    <Build Include="dbo\Stored Procedures\Product\spProduct_GetAll.sql" />
-    <Build Include="dbo\Stored Procedures\Product\spProduct_Insert.sql" />
-    <Build Include="dbo\Stored Procedures\Inventory\spInventory_Insert.sql" />
-    <Build Include="dbo\Stored Procedures\Product\spProductTemplate_Insert.sql" />
-    <Build Include="dbo\Stored Procedures\Product\spProductTemplate_Update.sql" />
-    <Build Include="dbo\Stored Procedures\Product\spProduct_GetTemplate.sql" />
-    <Build Include="dbo\Stored Procedures\Inventory\spInventory_UpdateQuantity.sql" />
-    <Build Include="dbo\Stored Procedures\Product\spProductImage_Delete.sql" />
-    <Build Include="dbo\Stored Procedures\Category\spCategory_Insert.sql" />
-    <Build Include="dbo\Stored Procedures\Category\spCategory_GetAllLeafs.sql" />
-    <Build Include="dbo\Stored Procedures\Category\spCategory_GetAncestors.sql" />
-    <Build Include="dbo\Stored Procedures\Category\spCategory_Update.sql" />
-     <Build Include="dbo\Stored Procedures\Category\spCategory_GetById.sql" />
-     <Build Include="dbo\Stored Procedures\Inventory\spInventory_GetByProductId.sql" />
-     <Build Include="dbo\Stored Procedures\Product\spProductTemplate_GetAll.sql" />
-     <Build Include="dbo\Stored Procedures\Product\spProductTemplate_GetById.sql" />
-     <Build Include="dbo\Stored Procedures\Category\spCategory_GetRoot.sql" />
-     <Build Include="dbo\Stored Procedures\Product\spProduct_Get.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ElectronicShopperData.publish.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Build Include="dbo\Category.sql" />
+    <Build Include="dbo\Inventory.sql" />
+    <Build Include="dbo\Order.sql" />
+    <Build Include="dbo\OrderDetails.sql" />
+    <Build Include="dbo\Product.sql" />
+    <Build Include="dbo\ProductImage.sql" />
+    <Build Include="dbo\ProductTemplate.sql" />
+    <Build Include="dbo\spCategory_GetAll.sql" />
+    <Build Include="dbo\spCategory_GetAllLeafs.sql" />
+    <Build Include="dbo\spCategory_GetAncestor.sql" />
+    <Build Include="dbo\spCategory_GetAncestors.sql" />
+    <Build Include="dbo\spCategory_GetById.sql" />
+    <Build Include="dbo\spCategory_GetRoot.sql" />
+    <Build Include="dbo\spCategory_Insert.sql" />
+    <Build Include="dbo\spCategory_Update.sql" />
+    <Build Include="dbo\spInventory_Create.sql" />
+    <Build Include="dbo\spInventory_GetByProductId.sql" />
+    <Build Include="dbo\spInventory_Insert.sql" />
+    <Build Include="dbo\spInventory_Update.sql" />
+    <Build Include="dbo\spOrderDetails_Insert.sql" />
+    <Build Include="dbo\spOrder_Insert.sql" />
+    <Build Include="dbo\spProductImage_Delete.sql" />
+    <Build Include="dbo\spProductImage_Insert.sql" />
+    <Build Include="dbo\spProductTemplate_GetAll.sql" />
+    <Build Include="dbo\spProductTemplate_GetById.sql" />
+    <Build Include="dbo\spProductTemplate_Insert.sql" />
+    <Build Include="dbo\spProductTemplate_Update.sql" />
+    <Build Include="dbo\spProduct_Get.sql" />
+    <Build Include="dbo\spProduct_GetAll.sql" />
+    <Build Include="dbo\spProduct_GetProductImages.sql" />
+    <Build Include="dbo\spProduct_GetTemplate.sql" />
+    <Build Include="dbo\spProduct_Insert.sql" />
   </ItemGroup>
 </Project>

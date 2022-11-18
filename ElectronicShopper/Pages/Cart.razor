@@ -97,7 +97,7 @@
             var images = await ProductData.GetProductImages(new ProductModel { Id = item.ProductId });
             var primaryImg = images.SingleOrDefault(x => x.IsPrimary)?.Path;
 
-            _images.Add(new ValueTuple<int, string>(item.ProductId, primaryImg ?? "./images/missing-image.png"));
+            _images.Add(new ValueTuple<int, string>((int)item.ProductId!, primaryImg ?? "./images/missing-image.png"));
         }
     }
 

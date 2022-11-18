@@ -39,7 +39,7 @@
                             <input class="form-input product-purchase-count mx-auto" type="number" min="1" @bind-value="_order.Quantity"/>
                         </div>
                         <div class="col-auto ms-auto align-self-center">
-                            <div class="text-end">@_product.RetailPrice.ToString("c")</div>
+                            <div class="text-end">@_product.Inventory.Price.ToString("c")</div>
                         </div>
                     </div>
                     <div class="row">
@@ -90,20 +90,20 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var p = await ProductData.GetProduct(Id);
+        var p = await ProductData.Get(Id);
         if (p is not null)
         {
             _product = p;
             var productImages = await ProductData.GetProductImages(_product);
 
             var primaryImg = productImages.SingleOrDefault(x => x.IsPrimary);
-            _selectedImage = primaryImg is not null ? primaryImg.Path : productImages[0].Path;
+            _selectedImage = primaryImg is not null ? primaryImg.Path : "./images/missing-image.png";
 
             _images = productImages.Select(image => image.Path).ToList();
             _order.Quantity = 1;
             _order.ProductId = _product.Id;
             _order.ProductName = _product.ProductName;
-            _order.PricePerItem = _product.RetailPrice;
+            _order.PricePerItem = _product.Inventory.Price;
 
             _previewImage = _selectedImage;
         }

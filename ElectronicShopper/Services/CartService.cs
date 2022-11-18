@@ -75,7 +75,7 @@ public class CartService : ICartService
             PurchasedProducts = Products
         };
 
-        await _orderData.AddOrder(order);
+        await _orderData.Create(order);
         Clear();
     }
 

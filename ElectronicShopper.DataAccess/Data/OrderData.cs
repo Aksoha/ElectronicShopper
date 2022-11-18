@@ -1,37 +1,63 @@
-using AutoMapper;
+using ElectronicShopper.DataAccess.StoredProcedures.Order;
 using ElectronicShopper.Library.Models;
-using ElectronicShopper.Library.Settings;
-using Microsoft.Extensions.Options;
+using FluentValidation;
+using Microsoft.Data.SqlClient;
 
 namespace ElectronicShopper.DataAccess.Data;
 
 public class OrderData : IOrderData
 {
-    private readonly ISqlDataAccess _sql;
-    private readonly IMapper _mapper;
     private readonly string _connectionString;
+    private readonly IMapper _mapper;
+    private readonly IValidator<OrderModel> _validator;
+    private readonly ISqlDataAccess _sql;
 
-    public OrderData(ISqlDataAccess sql, IMapper mapper, IOptionsSnapshot<ConnectionStringSettings> settings)
+    public OrderData(ISqlDataAccess sql, IMapper mapper, IOptionsSnapshot<ConnectionStringSettings> settings,
+        IValidator<OrderModel> validator)
     {
+        ArgumentNullException.ThrowIfNull(validator);
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(mapper);
+        ArgumentNullException.ThrowIfNull(sql);
+        
         _sql = sql;
         _mapper = mapper;
+        _validator = validator;
         _connectionString = settings.Value.ElectronicShopperData;
     }
 
-    public async Task AddOrder(OrderModel order)
+    public async Task Create(OrderModel order)
     {
-        _sql.StartTransaction(_connectionString);
+        await _validator.ValidateAndThrowAsync(order);
 
-        var id = await _sql.SaveData<dynamic, int>("spOrder_Insert", new { order.UserId });
+        var spOrder = _mapper.Map<OrderInsertStoredProcedure>(order);
 
-        foreach (var item in order.PurchasedProducts)
+
+        DatabaseDateTimeModel result;
+        try
         {
-            await _sql.SaveData("spOrderDetails_Insert",
-                new { item.ProductId, OrderId = id, item.Quantity, item.PricePerItem });
+            _sql.StartTransaction(_connectionString);
+            result = await _sql.SaveData<OrderInsertStoredProcedure, DatabaseDateTimeModel>(spOrder);
+
+            foreach (var orderDetail in order.PurchasedProducts)
+            {
+                var spOrderDetail = _mapper.Map<OrderDetailsInsertStoredProcedure>(orderDetail);
+                spOrderDetail.OrderId = result.Id;
+                var detailId = await _sql.SaveData<OrderDetailsInsertStoredProcedure, int>(spOrderDetail);
+                orderDetail.Id = detailId;
+            }
+
+            _sql.CommitTransaction();
         }
-
-        _sql.CommitTransaction();
-
-        order.Id = id;
+        catch (SqlException e)
+        {
+            _sql.RollbackTransaction();
+            if (e.Message == "Insufficient quantity")
+                throw new DatabaseException("Insufficient quantity", e);
+            throw;
+        }
+        
+        order.Id = result.Id;
+        order.PurchaseTime = (DateTime)result.DateTime!;
     }
 }

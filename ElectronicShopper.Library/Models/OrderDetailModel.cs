@@ -4,12 +4,11 @@ using System.Runtime.CompilerServices;
 
 namespace ElectronicShopper.Library.Models;
 
-public class OrderDetailModel : INotifyPropertyChanged
+public class OrderDetailModel : IDbEntity, INotifyPropertyChanged
 {
-    public int Id { get; set; }
-    public int ProductId { get; set; }
+    public int? Id { get; set; }
+    public int? ProductId { get; set; }
     public string ProductName { get; set; } = string.Empty;
-    public string? Image { get; set; }
 
     [Range(0, double.PositiveInfinity)]
     public int Quantity

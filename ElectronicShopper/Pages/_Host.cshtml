@@ -4,5 +4,6 @@
 @{
     Layout = "_Layout";
 }
-
-<component type="typeof(App)" render-mode="ServerPrerendered" />
+    @* HACK: render mode is currently set to server instead of prerender due to issues 
+    which occured when CartService attempted to load local storage*@
+<component type="typeof(App)" render-mode="Server" />

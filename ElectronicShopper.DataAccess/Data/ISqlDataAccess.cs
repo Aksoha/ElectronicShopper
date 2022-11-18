@@ -1,10 +1,12 @@
+using ElectronicShopper.DataAccess.StoredProcedures;
+
 namespace ElectronicShopper.DataAccess.Data;
 
 public interface ISqlDataAccess
 {
-    Task<List<T>> LoadData<T, U>(string storedProcedure, U parameters);
-    Task<U> SaveData<T, U>(string storedProcedure, T parameters);
-    Task SaveData<T>(string storedProcedure, T parameters);
+    Task<IEnumerable<TResult>> LoadData<TSource, TResult>(TSource parameters) where TSource : IStoredProcedure;
+    Task<TResult> SaveData<TSource, TResult>(TSource parameters) where TSource : IStoredProcedure;
+    Task SaveData<TSource>(TSource parameters) where TSource : IStoredProcedure;
     void StartTransaction(string connectionString);
     void CommitTransaction();
     void RollbackTransaction();

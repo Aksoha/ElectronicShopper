@@ -1,8 +1,8 @@
 namespace ElectronicShopper.Library.Models;
 
-public class CategoryModel
+public class CategoryModel : IDbEntity
 {
-    public int Id { get; set; }
+    public int? Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public List<CategoryModel>? Ancestors { get; set; }
+    public CategoryModel? Parent { get; set; }
 }

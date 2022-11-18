@@ -9,24 +9,24 @@
 @inject ICartService CartService
 
 <div class="container-fluid">
-    @if (_products is not null)
+    @if (_products?.Count() > 0)
     {
         <div class="row">
             <!-- Filters -->
             <div class="col-md-12 col-lg-2">
                 <div class="row">
                     <div class="col-4">
-                        <small>@_products.MinBy(x => x.RetailPrice)?.RetailPrice.ToString("c")</small>
+                        <small>@_products.Select(x => x.Inventory.Price).Min().ToString("c")</small>
                     </div>
                     <div class="col-4">
                         <small>@_priceThreshold.ToString("c")</small>
                     </div>
                     <div class="col-4">
-                        <small>@_products.MaxBy(x => x.RetailPrice)?.RetailPrice.ToString("c")</small>
+                        <small>@_products.Select(x => x.Inventory.Price).Max().ToString("c")</small>
                     </div>
                 </div>
                 <div class="row">
-                    <input class="price-slider" type="range" min="@_products.MinBy(x => x.RetailPrice)?.RetailPrice" max="@_products.MaxBy(x => x.RetailPrice)?.RetailPrice"
+                    <input class="price-slider" type="range" min="@_products.Select(x => x.Inventory.Price).Min()" max="@_products.Select(x => x.Inventory.Price).Max()"
                            @bind="_priceThreshold" @bind:event="oninput" onchange="@FilterProductPrice"/>
                 </div>
 
@@ -56,7 +56,7 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-6 align-self-center">
-                                        @product.RetailPrice.ToString("c")
+                                        @product.Inventory.Price.ToString("c")
                                     </div>
                                     <div class="col-6 text-end">
                                         <img class="product-card-btn filter-green" src="./images/Add-to-cart.svg" alt="add to cart"
@@ -94,21 +94,35 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        var products = await ProductData.GetProducts();
+        var products = await ProductData.GetAll();
 
 
-        _products = from item in products
-            where item.Category.Id == Id || item.Category.Ancestors.Any(i => i.Id == Id)
-            select item;
+        var p = new List<ProductModel>();
+        foreach (var product in products)
+        {
+            var category = product.Category;
+
+            while (category is not null)
+            {
+                if (category.Id == Id)
+                {
+                    p.Add(product);
+                    break;
+                }
+                category = category.Parent;
+            }
+        }
+        _products = p;
+
 
         var filteredProducts = _products.ToList();
         _filteredProducts = filteredProducts;
 
-        if(filteredProducts.Count == 0)
+        if (filteredProducts.Count == 0)
             return;
-        
+
         _selectedSortMethod = ProductSort.NameAscending;
-        _priceThreshold = filteredProducts.MaxBy(x => x.RetailPrice)!.RetailPrice;
+        _priceThreshold = filteredProducts.Select(x => x.Inventory.Price).Max();
         FilterProductPrice();
     }
 
@@ -123,7 +137,7 @@
         {
             Quantity = 1,
             ProductId = item.Id,
-            PricePerItem = item.RetailPrice,
+            PricePerItem = item.Inventory.Price,
             ProductName = item.ProductName
         };
 
@@ -143,15 +157,15 @@
         {
             ProductSort.NameAscending => _filteredProducts.OrderBy(x => x.ProductName),
             ProductSort.NameDescending => _filteredProducts.OrderByDescending(x => x.ProductName),
-            ProductSort.PriceAscending => _filteredProducts.OrderBy(x => x.RetailPrice).ToList(),
-            ProductSort.PriceDescending => _filteredProducts.OrderByDescending(x => x.RetailPrice),
+            ProductSort.PriceAscending => _filteredProducts.OrderBy(x => x.Inventory.Price).ToList(),
+            ProductSort.PriceDescending => _filteredProducts.OrderByDescending(x => x.Inventory.Price),
             _ => _filteredProducts
             };
     }
 
     private void FilterProductPrice()
     {
-        _filteredProducts = _products!.Where(x => x.RetailPrice <= _priceThreshold);
+        _filteredProducts = _products!.Where(x => x.Inventory.Price <= _priceThreshold);
         SortProducts();
     }
 
