@@ -1,0 +1,49 @@
+.product-img-preview {
+    max-height: 100%;
+    width: 100%;
+    border-radius: 5px;
+}
+
+.btn-remove {
+    width: 40px;
+    height: auto;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.btn-remove:hover {
+    transform: scale(1.05);
+}
+
+
+.img-text-input {
+    width: 100%;   
+}
+
+
+.img-checkmark {
+    top: 6px;
+}
+
+.img-checkmark .img-checkbox-tooltip {
+    visibility: hidden;
+    background-color: #000000b7;
+    color: white;
+    text-align: center;
+    padding: 5px;
+    border-radius: 8px;
+    position: absolute;
+    z-index: 100;
+    font-size: 11px;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -70px;
+    width: 140px;
+
+}
+
+
+.img-checkmark:hover .img-checkbox-tooltip {
+    visibility: visible;
+    transition-delay:600ms;
+}

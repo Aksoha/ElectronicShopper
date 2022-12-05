@@ -1,0 +1,127 @@
+﻿@page "/create-product"
+@attribute [Authorize(Roles = "admin")]
+@using ElectronicShopper.Library.Models
+@implements IDisposable
+
+<div class="container-fluid">
+    <Accordion>
+        <AccordionItem Title="Create category" Collapsed="true">
+            <CreateCategory CategoryCreated="CategoryDataChanged"/>
+        </AccordionItem>
+        <AccordionItem Title="Create template" Collapsed="true">
+            <CreateProductTemplate TemplateCreated="ProductTemplateChanged"/>
+        </AccordionItem>
+        <AccordionItem Title="Product">
+            @*  Product name category price and inventory *@
+            <div class="row justify-content-center">
+                <div class="col-1 my-auto text-center">
+                    <label for="product-name">Name</label>
+                </div>
+                <div class="col-11">
+                    <input id="product-name" class="form-input w-100 mx-auto" type="text" @bind="_product.ProductName"
+                           placeholder="Product name"/>
+                </div>
+                <div class="col-1 my-auto text-center">
+                    <label for="product-price">Price</label>
+                </div>
+                <div class="col-11">
+                    <input id="product-price" class="form-input w-100 mx-auto" type="text" @bind="_product.Inventory.Price"
+                           placeholder="Product price"/>
+                </div>
+                <div class="col-1 my-auto text-center">
+                    <label for="product-quantity">Quantity</label>
+                </div>
+                <div class="col-11">
+                    <input id="product-quantity" class="form-input w-100 mx-auto" type="text" @bind="_product.Inventory.Quantity"
+                           placeholder="Product quantity"/>
+                </div>
+                <div class="col-1 my-auto text-center">
+                    <label for="product-quantity-reserved">Reserved</label>
+                </div>
+                <div class="col-11">
+                    <input id="product-quantity-reserved" class="form-input w-100 mx-auto" type="text" @bind="_product.Inventory.Reserved"
+                           placeholder="Product reserved quantity"/>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <div class="m-2">
+                    <DropDownList T="CategoryModel" DataSource="_categories"
+                                  PropertyName="@nameof(CategoryModel.Name)" @bind-Value="_selectedCategory"
+                                  Placeholder="Category"/>
+                </div>
+            </div>
+            @*  properties and images *@
+            <div class="my-2">
+                <Accordion>
+                    <AccordionItem Title="Item properties">
+                        @if (_templates is not null)
+                        {
+                            <DropDownList T="ProductTemplateModel" DataSource="_templates"
+                                          PropertyName="@nameof(ProductTemplateModel.Name)"
+                                          Placeholder="Select template" ValueChanged="TemplateHasChanged"/>
+                        }
+                        @if (_product.Properties.Count > 0)
+                        {
+                            <div class="row">
+                                <div class="col-2 my-auto text-center">Property Name</div>
+                                <div class="col-10 my-auto text-center">Property values</div>
+                                @foreach (var item in _product.Properties.Keys)
+                                {
+                                    <div class="col-2 my-auto text-center">@item</div>
+                                    <div class="col-10">
+                                        <input type="text" class="form-input w-100 mx-auto" onchange="@((ChangeEventArgs e) => PropertyChanged(item, e))"/>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </AccordionItem>
+                    <AccordionItem Title="images">
+                        <div class="row">
+                            @foreach (var image in Images)
+                            {
+                                <div class="col-3 text-center">
+                                    <img class="product-img-preview" src="@image.Url" alt="product image">
+                                    <div class="d-flex">
+                                        <input class="form-input img-text-input flex-grow-1" type="text" @bind="image.Name"/>
+                                        <label class="checkbox-wrapper align-self-center">
+                                            <input @bind="image.IsPrimary" type="checkbox" oninput="@(() => PrimaryImageChanged(image))"/>
+                                            <span class="checkmark img-checkmark">
+                                                <span class="img-checkbox-tooltip">
+                                                    Indicates wherever this image should be used as primary image.
+                                                    Primary image is used to display products in a preview cards as well as in checkout.
+                                                </span>
+                                            </span>
+                                            <img class="btn-remove" src="images/Trash-can.png" alt="remove item" onclick="@(() => RemoveImage(image))">
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <label for="file-upload" class="btn-upload">
+                            Add
+                        </label>
+                        <InputFile type="file" id="file-upload" OnChange="@LoadImages" multiple accept=".jpg"/>
+                        <button class="btn btn-danger" onclick="@RemoveAllImages">Remove all</button>
+                        <div class="row justify-content-center">
+                            @if(string.IsNullOrWhiteSpace(_imageCountExceededError) == false)
+                            {
+                                <div class="validation-message">@_imageCountExceededError</div>
+                            }
+                        </div>
+                    </AccordionItem>
+                </Accordion>
+            </div>
+            @* create product button *@
+            <div>
+                <button class="btn btn-primary" onclick="@Create">Create product</button>
+            </div>
+            @* error messages *@
+            <div class="row justify-content-center">
+                @foreach (var error in _errors)
+                {
+                    <div class="validation-message">@error</div>
+                }
+            </div>
+        </AccordionItem>
+    </Accordion>
+</div>
