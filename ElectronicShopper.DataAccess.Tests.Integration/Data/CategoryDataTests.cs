@@ -1,6 +1,7 @@
 ﻿using ElectronicShopper.DataAccess.Data;
 using ElectronicShopper.DataAccess.Tests.Integration.DataGenerators;
 using ElectronicShopper.Library.Models;
+using FluentValidation;
 
 namespace ElectronicShopper.DataAccess.Tests.Integration.Data;
 
@@ -57,6 +58,27 @@ public class CategoryDataTests : IAsyncLifetime
         await Assert.ThrowsAsync<DatabaseException>(Act);
     }
 
+    
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    public async Task Create_WhenCategoryNameIsEmptyOrWhitespace(string name)
+    {
+        // Arrange
+        var category = CategoryGenerator.Generate();
+        category.Name = name;
+        
+        // Act
+        async Task Act()
+        {
+            await _data.Create(category);
+        }
+
+
+        // Assert
+        await Assert.ThrowsAsync<ValidationException>(Act);
+    }
+    
 
     [Fact]
     public async Task Get_WhenDataIsValid()
@@ -95,7 +117,7 @@ public class CategoryDataTests : IAsyncLifetime
         // Assert
         Assert.Null(actual);
     }
-
+    
     [Fact]
     public async Task GetRootCategories()
     {

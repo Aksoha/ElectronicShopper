@@ -15,6 +15,8 @@ public static class DatabaseServiceExtensions
         services.AddScoped<IValidator<OrderDetailModel>, OrderDetailCreateValidator>();
         services.AddScoped<IValidator<ProductInsertModel>, ProductCreateValidator>();
         services.AddScoped<IValidator<MemoryImageModel>, ProductImageCreateValidator>();
+        services.AddScoped<IValidator<CategoryCreateModel>, CategoryCreateValidator>();
+        services.AddScoped<IValidator<ProductTemplateModel>, ProductTemplateCreateValidator>();
         services.AddScoped<IFileSystem, FileSystem>();
 
         services.AddTransient<ISqlDataAccess, SqlDataAccess>();

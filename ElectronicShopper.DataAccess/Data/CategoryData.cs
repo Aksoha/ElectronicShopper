@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using ElectronicShopper.DataAccess.StoredProcedures.Category;
 using ElectronicShopper.Library.Models;
+using FluentValidation;
 using Microsoft.Data.SqlClient;
 using IDbEntity = ElectronicShopper.Library.Models.IDbEntity;
 
@@ -8,24 +9,29 @@ namespace ElectronicShopper.DataAccess.Data;
 
 public class CategoryData : ICategoryData
 {
+    private readonly IValidator<CategoryCreateModel> _categoryValidator;
     private readonly string _connectionString;
     private readonly IMapper _mapper;
     private readonly ISqlDataAccess _sql;
 
-    public CategoryData(ISqlDataAccess sql, IMapper mapper, IOptionsSnapshot<ConnectionStringSettings> settings)
+    public CategoryData(ISqlDataAccess sql, IMapper mapper, IOptionsSnapshot<ConnectionStringSettings> settings,
+        IValidator<CategoryCreateModel> categoryValidator)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(mapper);
         ArgumentNullException.ThrowIfNull(sql);
+        ArgumentNullException.ThrowIfNull(categoryValidator);
 
         _sql = sql;
         _mapper = mapper;
+        _categoryValidator = categoryValidator;
         _connectionString = settings.Value.ElectronicShopperData;
     }
 
     public async Task Create(CategoryCreateModel category)
     {
         if (category.ParentId is not null) await ThrowIfCategoryDoesNotExist(category.ParentId);
+        await _categoryValidator.ValidateAndThrowAsync(category);
 
         var sp = _mapper.Map<CategoryInsertStoredProcedure>(category);
 

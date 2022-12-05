@@ -10,7 +10,9 @@ public static class ProductGenerator
     {
         var faker = new Faker<ProductInsertModel>()
             .RuleFor(x => x.ProductName, x => x.Commerce.ProductName())
-            .RuleFor(x => x.Template, GenerateTemplate());
+            .RuleFor(x => x.Template, GenerateTemplate())
+            .RuleFor(x => x.Images, GenerateImages())
+            .RuleFor(x => x.Inventory, GenerateRandomInventory(20_000, 500, 15_000));
 
         var product = faker.Generate();
         foreach (var property in product.Template!.Properties.Select(template => new Product().Property(template)))
@@ -51,11 +53,38 @@ public static class ProductGenerator
     public static ProductTemplateModel GenerateTemplate(int num = 3)
     {
         var properties = new Faker().Product().UniqueTemplate(num);
-        return new ProductTemplateModel { Properties = properties.ToList() };
+        var name = new Faker().Commerce.Product();
+        return new ProductTemplateModel { Properties = properties.ToList(), Name = name };
     }
 
     public static Dictionary<string, List<string>> GenerateProperties(int num = 3)
     {
         return new Faker().Product().Property(num);
+    }
+
+    public static InventoryModel GenerateInventory(int quantity, int reserved, decimal price)
+    {
+        if (quantity < 0)
+            throw new ArgumentOutOfRangeException($"Expected non negative value for " +
+                                                  $"parameter {nameof(quantity)}, actual value was {quantity}");
+        if (reserved < 0)
+            throw new ArgumentOutOfRangeException($"Expected non negative value for " +
+                                                  $"parameter {nameof(reserved)}, actual value was {reserved}");
+        if (price < 0)
+            throw new ArgumentOutOfRangeException($"Expected non negative value for " +
+                                                  $"parameter {nameof(price)}, actual value was {price}");
+        
+        // rounding down to 4 places because that's how many are stored in sql
+        price = Math.Round(price, 4);
+        return new InventoryModel { Price = price, Quantity = quantity, Reserved = reserved };
+    }
+
+    public static InventoryModel GenerateRandomInventory(int maxQuantity, int maxReserved, decimal maxPrice)
+    {
+        var r = new Random();
+        var quantity = r.Next(maxQuantity);
+        var reserved = r.Next(maxReserved);
+        var price = (decimal)r.NextDouble() * maxPrice;
+        return GenerateInventory(quantity, reserved, price);
     }
 }

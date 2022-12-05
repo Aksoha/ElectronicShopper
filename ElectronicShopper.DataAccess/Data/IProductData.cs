@@ -29,6 +29,10 @@ public interface IProductData
     ///     Thrown when <paramref name="template" />
     ///     does not pass data validation.
     /// </exception>
+    /// <exception cref="FluentValidation.ValidationException">
+    ///     Thrown when <paramref name="template" />
+    ///     does not pass data validation.
+    /// </exception>
     Task CreateTemplate(ProductTemplateModel template);
 
     /// <summary>
@@ -43,6 +47,8 @@ public interface IProductData
     /// </summary>
     /// <param name="productId">Id of the product.</param>
     /// <param name="inventory">Inventory to add.</param>
+    [Obsolete(@"Use of this method is not needed because right now there can be 
+        only one InventoryModel per Product in the database. Product InventoryModel is automatically is created with Create method", true)]
     Task CreateInventory(int productId, InventoryModel inventory);
 
     /// <summary>

@@ -8,6 +8,7 @@ using ElectronicShopper.Library.Settings;
 using ElectronicShopper.Library.Validators;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 
@@ -66,16 +67,19 @@ public class DatabaseFactory : ICollectionFixture<DatabaseFactory>, IDisposable
 
     private void ConfigureTestServices(IMapper mapper)
     {
-        var orderValidator = new OrderCreateValidator();
-        var productValidator = new ProductCreateValidator();
+        var orderDetailValidator = new OrderDetailCreateValidator();
+        var orderValidator = new OrderCreateValidator(orderDetailValidator);
+        var categoryValidator = new CategoryCreateValidator();
         var imageValidator = new ProductImageCreateValidator();
-        
-        
+        var productValidator = new ProductCreateValidator(imageValidator);
+        var templateValidator = new ProductTemplateCreateValidator();
+        var logger = Mock.Of<ILogger<ProductData>>();
+
         var sql = new SqlDataAccess();
         OrderData = new OrderData(sql, mapper, ConnectionSettings, orderValidator);
-        CategoryData = new CategoryData(sql, mapper, ConnectionSettings);
+        CategoryData = new CategoryData(sql, mapper, ConnectionSettings, categoryValidator);
         ProductData = new ProductData(sql, mapper, CategoryData, ConnectionSettings, ImageSettings, _fileSystem,
-            productValidator, imageValidator);
+            productValidator, imageValidator, templateValidator, logger);
     }
 
     private void ConfigureSettings()

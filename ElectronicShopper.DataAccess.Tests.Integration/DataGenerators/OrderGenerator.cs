@@ -13,10 +13,10 @@ public static class OrderGenerator
         return faker;
     }
 
-    public static List<OrderDetailModel> OrderDetails(IEnumerable<ProductInsertModel> product, int quantity = 50)
+    public static List<OrderDetailModel> OrderDetails(IEnumerable<int?> productId, int quantity = 50)
     {
         var r = new Random();
-        return product.Select(item => new OrderDetailModel
-            { Quantity = quantity, ProductId = item.Id, PricePerItem = r.Next(1000) }).ToList();
+        return productId.Select(item => new OrderDetailModel
+            { Quantity = quantity, ProductId = item, PricePerItem = r.Next(1000) }).ToList();
     }
 }

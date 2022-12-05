@@ -15,6 +15,9 @@ public interface ICategoryData
     ///     Thrown when <see cref="CategoryCreateModel.ParentId" /> is not <see langword="null" />
     ///     but parent is not present in the database.
     /// </exception>
+    /// <exception cref="FluentValidation.ValidationException">
+    ///     Thrown when <see cref="CategoryCreateModel.Name" /> is empty or whitespace.
+    /// </exception>
     Task Create(CategoryCreateModel category);
 
 

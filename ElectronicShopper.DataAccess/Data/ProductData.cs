@@ -4,6 +4,8 @@ using ElectronicShopper.Library;
 using ElectronicShopper.Library.Models;
 using FluentValidation;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
+using ProductModel = ElectronicShopper.Library.Models.ProductModel;
 
 namespace ElectronicShopper.DataAccess.Data;
 
@@ -14,15 +16,21 @@ public class ProductData : IProductData
     private readonly IFileSystem _fileSystem;
     private readonly ImageStorageSettings _imageSettings;
     private readonly IValidator<MemoryImageModel> _imageValidator;
+    private readonly ILogger<ProductData> _logger;
     private readonly IMapper _mapper;
     private readonly IValidator<ProductInsertModel> _productValidator;
     private readonly ISqlDataAccess _sql;
+    private readonly IValidator<ProductTemplateModel> _templateValidator;
 
     public ProductData(ISqlDataAccess sql, IMapper mapper, ICategoryData categoryData,
         IOptionsSnapshot<ConnectionStringSettings> settings, IOptionsSnapshot<ImageStorageSettings> imageSettings
         , IFileSystem fileSystem, IValidator<ProductInsertModel> productValidator,
-        IValidator<MemoryImageModel> imageValidator)
+        IValidator<MemoryImageModel> imageValidator,
+        IValidator<ProductTemplateModel> templateValidator,
+        ILogger<ProductData> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(templateValidator);
         ArgumentNullException.ThrowIfNull(imageValidator);
         ArgumentNullException.ThrowIfNull(productValidator);
         ArgumentNullException.ThrowIfNull(fileSystem);
@@ -38,6 +46,8 @@ public class ProductData : IProductData
         _fileSystem = fileSystem;
         _productValidator = productValidator;
         _imageValidator = imageValidator;
+        _templateValidator = templateValidator;
+        _logger = logger;
         _imageSettings = imageSettings.Value;
         _connectionString = settings.Value.ElectronicShopperData;
     }
@@ -59,18 +69,65 @@ public class ProductData : IProductData
         {
             _sql.StartTransaction(_connectionString);
             var id = await _sql.SaveData<ProductInsertStoredProcedure, int>(sp);
-            _sql.CommitTransaction();
             product.Id = id;
+            _logger.LogInformation("Created product {Name} with Id {Id}", product.ProductName, product.Id);
+
+
+            var p = new ProductModel { Id = id, Inventory = product.Inventory };
+            foreach (var image in product.Images)
+            {
+                await CreateImageWithoutTransaction(p, image);
+            }
+
+            await CreateInventoryWithoutTransaction((int)p.Id!, p.Inventory);
+            _sql.CommitTransaction();
         }
-        catch (SqlException)
+        catch (Exception)
         {
             _sql.RollbackTransaction();
             throw;
         }
     }
 
+
+    private async Task CreateInventoryWithoutTransaction(int productId, InventoryModel inventory)
+    {
+        var sp = _mapper.Map<InventoryInsertStoredProcedure>(inventory);
+        sp.ProductId = productId;
+        var id = await _sql.SaveData<InventoryInsertStoredProcedure, int>(sp);
+        inventory.Id = id;
+        _logger.LogInformation("Created inventory for product {ProductId} with Id {Id}", productId, inventory.Id);
+    }
+
+
+    /// <summary>
+    /// Add product to the database. Requires opened transaction.
+    /// </summary>
+    /// <param name="product">Product to which image will be added.</param>
+    /// <param name="image">Image to add.</param>
+    private async Task CreateImageWithoutTransaction(ProductModel product, MemoryImageModel image)
+    {
+        await _imageValidator.ValidateAndThrowAsync(image);
+        var folderPath = $"{_imageSettings.Products}/{product.ProductName}";
+        var filePath = $"{folderPath}/{image.Name}{image.Extension}";
+        var sp = _mapper.Map<ProductImageInsertStoredProcedure>(product);
+        _mapper.Map(image, sp);
+        sp.Path = filePath;
+
+        folderPath = $"{_imageSettings.BasePath}{folderPath}";
+        filePath = $"{_imageSettings.BasePath}{filePath}";
+
+        var id = await _sql.SaveData<ProductImageInsertStoredProcedure, int>(sp);
+        if (_fileSystem.Exists(folderPath) == false)
+            _fileSystem.CreateDirectory(folderPath);
+        await _fileSystem.Save(filePath, image.Stream);
+        image.Id = id;
+        _logger.LogInformation("Created image {Name} with Id {Id}", image.Name, image.Id);
+    }
+
     public async Task CreateTemplate(ProductTemplateModel template)
     {
+        await _templateValidator.ValidateAndThrowAsync(template);
         var sp = _mapper.Map<ProductTemplateInsertStoredProcedure>(template);
 
         try
@@ -79,6 +136,7 @@ public class ProductData : IProductData
             var id = await _sql.SaveData<ProductTemplateInsertStoredProcedure, int>(sp);
             _sql.CommitTransaction();
             template.Id = id;
+            _logger.LogInformation("Created template {Name} with Id {Id}", template.Name, template.Id);
         }
         catch (SqlException)
         {
@@ -89,51 +147,26 @@ public class ProductData : IProductData
 
     public async Task CreateImage(ProductModel product, MemoryImageModel image)
     {
-        await _imageValidator.ValidateAndThrowAsync(image);
-
-        var folderPath = $"{_imageSettings.Products}/{product.ProductName}";
-        var filePath = $"{folderPath}/{image.Name}{image.Extension}";
-        var sp = _mapper.Map<ProductImageInsertStoredProcedure>(product);
-        _mapper.Map(image, sp);
-        sp.Path = filePath;
-
-        folderPath = $"{_imageSettings.BasePath}{folderPath}";
-        filePath = $"{_imageSettings.BasePath}{filePath}";
-
         try
         {
             _sql.StartTransaction(_connectionString);
-            var id = await _sql.SaveData<ProductImageInsertStoredProcedure, int>(sp);
-
-            if (_fileSystem.Exists(folderPath) == false)
-                _fileSystem.CreateDirectory(folderPath);
-            await _fileSystem.Save(filePath, image.Stream);
+            await CreateImageWithoutTransaction(product, image);
             _sql.CommitTransaction();
-            image.Id = id;
         }
         catch (Exception)
         {
             _sql.RollbackTransaction();
-
-            if (_fileSystem.Exists(filePath))
-                _fileSystem.DeleteFile(filePath);
-
             throw;
         }
     }
-
+    
     public async Task CreateInventory(int productId, InventoryModel inventory)
     {
-        var sp = _mapper.Map<InventoryInsertStoredProcedure>(inventory);
-        sp.ProductId = productId;
-
         try
         {
             _sql.StartTransaction(_connectionString);
-            var id = await _sql.SaveData<InventoryInsertStoredProcedure, int>(sp);
+            await CreateInventoryWithoutTransaction(productId, inventory);
             _sql.CommitTransaction();
-
-            inventory.Id = id;
         }
         catch (SqlException)
         {
@@ -281,6 +314,7 @@ public class ProductData : IProductData
             _sql.StartTransaction(_connectionString);
             await _sql.SaveData(sp);
             _sql.CommitTransaction();
+            inventory.Id = product.Inventory.Id;
             product.Inventory = inventory;
         }
         catch (SqlException e)

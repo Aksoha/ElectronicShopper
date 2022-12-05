@@ -47,6 +47,10 @@ public class ProductDataTests : IAsyncLifetime
 
         // Assert
         Assert.NotNull(p.Id);
+        foreach (var image in p.Images)
+        {
+            Assert.NotNull(image.Id);
+        }
     }
 
     [Fact]
@@ -131,6 +135,28 @@ public class ProductDataTests : IAsyncLifetime
 
 
     [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task CreateTemplate_WhenNameIsEmptyOrWhitespace(string name)
+    {
+        // Arrange
+        var template = ProductGenerator.GenerateTemplate();
+        template.Name = name;
+
+
+        // Act
+        async Task Act()
+        {
+            await _productData.CreateTemplate(template);
+        }
+
+
+        // Assert
+        await Assert.ThrowsAsync<ValidationException>(Act);
+    }
+
+
+    [Theory]
     [InlineData("Concrete Steel Bike.jpg")]
     [InlineData("Awesome Rubber Car.jpeg")]
     [InlineData("Practical Steel Pizza.png")]
@@ -204,11 +230,8 @@ public class ProductDataTests : IAsyncLifetime
         p.CategoryId = c.Id;
         await _productData.Create(p);
 
-        var images = ProductGenerator.GenerateImages();
-        foreach (var img in images) await _productData.CreateImage(new ProductModel { Id = p.Id }, img);
-
-        var r = new Random();
-        var expectedInventory = await CreateInventory(p, r.Next(2_000), r.Next(50), r.Next(1_000));
+        var images = p.Images;
+        var expectedInventory = p.Inventory;
 
 
         // Act
@@ -249,7 +272,13 @@ public class ProductDataTests : IAsyncLifetime
         {
             var r = new Random();
             var product = await CreateProductWithDependencies();
-            product.Inventory = await CreateInventory(product, r.Next(), r.Next(), r.Next());
+            var images = ProductGenerator.GenerateImages();
+
+            foreach (var image in images)
+            {
+                await _productData.CreateImage(product, image);
+            }
+            product.Images = await _productData.GetProductImages(product);
             createdProducts.Add(product);
         }
 
@@ -302,6 +331,7 @@ public class ProductDataTests : IAsyncLifetime
         // Assert
         Assert.NotNull(actual);
         Assert.Equal(expected.Id, actual!.Id);
+        Assert.Equal(expected.Name, actual.Name);
         var expectedProperties = JsonSerializer.Serialize(expected.Properties);
         var actualProperties = JsonSerializer.Serialize(actual.Properties);
         Assert.Equal(expectedProperties, actualProperties);
@@ -330,6 +360,7 @@ public class ProductDataTests : IAsyncLifetime
         {
             Assert.NotNull(actual.Id);
             var expected = createdTemplates.Single(x => x.Id == actual.Id);
+            Assert.Equal(expected.Name, actual.Name);
             var expectedProperties = JsonSerializer.Serialize(expected.Properties);
             var actualProperties = JsonSerializer.Serialize(actual.Properties);
             Assert.Equal(expectedProperties, actualProperties);
@@ -366,7 +397,6 @@ public class ProductDataTests : IAsyncLifetime
     {
         // Arrange
         var product = await CreateProductWithDependencies();
-        var oldInventory = await CreateInventory(product, 1, 2, (decimal)3.33);
         var expected = new InventoryModel { Price = (decimal)2.12, Quantity = 14, Reserved = 1 };
 
         // Act
@@ -426,20 +456,20 @@ public class ProductDataTests : IAsyncLifetime
     /// </summary>
     /// <returns>Newly created <see cref="ProductModel" /></returns>
     /// <remarks>
-    ///     Does not set <see cref="ProductModel.Inventory" />,
-    ///     <see cref="ProductModel.Images" />, <see cref="ProductModel.Discontinued" /> properties.
+    ///     Does not set <see cref="ProductModel.Images" />, <see cref="ProductModel.Discontinued" /> properties.
     /// </remarks>
     private async Task<ProductModel> CreateProductWithDependencies()
     {
         var p = ProductGenerator.GenerateForInsert();
         var c = CategoryGenerator.Generate();
+        p.Images.Clear();
         await _categoryData.Create(c);
         p.CategoryId = c.Id;
         await _productData.Create(p);
         var category = await _categoryData.Get((int)c.Id!);
 
         return new ProductModel
-            { Id = p.Id, Category = category!, ProductName = p.ProductName, Properties = p.Properties };
+            { Id = p.Id, Category = category!, ProductName = p.ProductName, Properties = p.Properties, Inventory = p.Inventory};
     }
 
     private async Task<InventoryModel> CreateInventory(IDbEntity product, int quantity, int reserved,

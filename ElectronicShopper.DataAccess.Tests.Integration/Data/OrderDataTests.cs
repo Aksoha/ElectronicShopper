@@ -45,7 +45,7 @@ public class OrderDataTests : IAsyncLifetime
         // Arrange
         var productList = await GenerateProducts();
         var order = OrderGenerator.Generate();
-        order.PurchasedProducts = OrderGenerator.OrderDetails(productList, purchaseQuantity);
+        order.PurchasedProducts = OrderGenerator.OrderDetails(productList.Select(x => x.Id), purchaseQuantity);
 
         foreach (var item in productList)
             await CreateInventory(item, inventoryQuantity, inventoryReserve, 1);
@@ -71,7 +71,7 @@ public class OrderDataTests : IAsyncLifetime
         // Arrange
         var productList = await GenerateProducts();
         var order = OrderGenerator.Generate();
-        order.PurchasedProducts = OrderGenerator.OrderDetails(productList, purchaseQuantity);
+        order.PurchasedProducts = OrderGenerator.OrderDetails(productList.Select(x => x.Id), purchaseQuantity);
 
         foreach (var item in productList)
             await CreateInventory(item, inventoryQuantity, inventoryReserve, 1);
@@ -112,7 +112,7 @@ public class OrderDataTests : IAsyncLifetime
         // Arrange
         var productList = await GenerateProducts(1);
         var order = OrderGenerator.Generate();
-        order.PurchasedProducts = OrderGenerator.OrderDetails(productList);
+        order.PurchasedProducts = OrderGenerator.OrderDetails(productList.Select(x => x.Id));
 
         foreach (var item in order.PurchasedProducts) item.Quantity = quantity;
 
@@ -132,7 +132,7 @@ public class OrderDataTests : IAsyncLifetime
         // Arrange
         var productList = await GenerateProducts(1);
         var order = OrderGenerator.Generate();
-        order.PurchasedProducts = OrderGenerator.OrderDetails(productList);
+        order.PurchasedProducts = OrderGenerator.OrderDetails(productList.Select(x => x.Id));
 
         foreach (var item in order.PurchasedProducts) item.ProductId = null;
 
@@ -153,7 +153,7 @@ public class OrderDataTests : IAsyncLifetime
         // Arrange
         var productList = await GenerateProducts(1);
         var order = OrderGenerator.Generate();
-        order.PurchasedProducts = OrderGenerator.OrderDetails(productList);
+        order.PurchasedProducts = OrderGenerator.OrderDetails(productList.Select(x => x.Id));
 
         foreach (var item in order.PurchasedProducts) item.PricePerItem = -1;
 
@@ -167,23 +167,25 @@ public class OrderDataTests : IAsyncLifetime
         await Assert.ThrowsAsync<ValidationException>(Act);
     }
 
-    private async Task<List<ProductInsertModel>> GenerateProducts(int num = 3)
+    private async Task<List<ProductModel>> GenerateProducts(int num = 3)
     {
-        var productList = new List<ProductInsertModel>();
+        var productList = new List<ProductModel>();
         for (var i = 0; i < num; i++)
         {
             var p = ProductGenerator.GenerateForInsert();
+            p.Inventory = new InventoryModel();
             var c = CategoryGenerator.Generate();
             await _categoryData.Create(c);
             p.CategoryId = c.Id;
             await _productData.Create(p);
-            productList.Add(p);
+            var insertedProduct = await _productData.Get((int)p.Id!);
+            productList.Add(insertedProduct!);
         }
 
         return productList;
     }
 
-    private async Task CreateInventory(ProductInsertModel product, int quantity, int reserved, decimal price)
+    private async Task CreateInventory(ProductModel product, int quantity, int reserved, decimal price)
     {
         ArgumentNullException.ThrowIfNull(product.Id);
 
@@ -194,6 +196,6 @@ public class OrderDataTests : IAsyncLifetime
             Reserved = reserved
         };
 
-        await _productData.CreateInventory((int)product.Id, inventory);
+        await _productData.UpdateInventory(product, inventory);
     }
 }
