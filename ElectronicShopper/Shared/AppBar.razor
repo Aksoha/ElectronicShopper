@@ -1,7 +1,8 @@
 ﻿@using ElectronicShopper.Library
 @using Microsoft.AspNetCore.Identity
-@using ElectronicShopper.DataAccess.Identity
 @using System.Security.Claims
+@using ElectronicShopper.Library.Identity
+@using ElectronicShopper.Library.Services
 @implements IDisposable
 @inject ICartService CartService
 @inject Navigation NavManager
@@ -11,7 +12,6 @@
 <div id="appbar" class="d-flex px-3">
     <h2 class="me-auto my-auto p-2 align-self-center appbar-title" onclick="@(() => NavManager.NavigateTo("/"))">ElectronicsShopper</h2>
     <div class="p-2 align-self-center">
-        @* <LoginDisplay/> *@
         <AuthorizeView>
             <Authorized>
                 <span>@UserManager.GetUserAsync(context.User).Result.FirstName</span>

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Security.Authentication;
-using ElectronicShopper.DataAccess.Identity;
 using ElectronicShopper.Library;
+using ElectronicShopper.Library.Identity;
 using ElectronicShopper.Library.Models;
 using Microsoft.AspNetCore.Identity;
 

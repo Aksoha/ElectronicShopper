@@ -1,10 +1,10 @@
 using Blazored.LocalStorage;
-using ElectronicShopper.DataAccess.DependencyInjection;
-using ElectronicShopper.DataAccess.Identity;
 using ElectronicShopper.Library;
+using ElectronicShopper.Library.DependencyInjection;
+using ElectronicShopper.Library.Identity;
+using ElectronicShopper.Library.Services;
 using ElectronicShopper.Library.Settings;
 using ElectronicShopper.Middleware;
-using ElectronicShopper.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;

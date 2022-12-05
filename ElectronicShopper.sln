@@ -11,11 +11,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Database", "Database", "{97
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ElectronicShopper.Library", "ElectronicShopper.Library\ElectronicShopper.Library.csproj", "{723C570B-136A-4233-93B3-D27EA7F387F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ElectronicShopper.DataAccess", "ElectronicShopper.DataAccess\ElectronicShopper.DataAccess.csproj", "{6EECBE05-C2B9-40FB-A968-08CAB88C9957}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{6097F7E3-8C6D-48A7-A177-C0FEDD101001}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ElectronicShopper.DataAccess.Tests.Integration", "ElectronicShopper.DataAccess.Tests.Integration\ElectronicShopper.DataAccess.Tests.Integration.csproj", "{37819DBB-3C06-4694-B287-B45E815F007F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ElectronicShopper.Tests.Integration", "ElectronicShopper.Tests.Integration\ElectronicShopper.Tests.Integration.csproj", "{37819DBB-3C06-4694-B287-B45E815F007F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,10 +35,6 @@ Global
 		{723C570B-136A-4233-93B3-D27EA7F387F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{723C570B-136A-4233-93B3-D27EA7F387F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{723C570B-136A-4233-93B3-D27EA7F387F3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6EECBE05-C2B9-40FB-A968-08CAB88C9957}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6EECBE05-C2B9-40FB-A968-08CAB88C9957}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6EECBE05-C2B9-40FB-A968-08CAB88C9957}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6EECBE05-C2B9-40FB-A968-08CAB88C9957}.Release|Any CPU.Build.0 = Release|Any CPU
 		{37819DBB-3C06-4694-B287-B45E815F007F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{37819DBB-3C06-4694-B287-B45E815F007F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37819DBB-3C06-4694-B287-B45E815F007F}.Release|Any CPU.ActiveCfg = Release|Any CPU

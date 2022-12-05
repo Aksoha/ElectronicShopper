@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
-using ElectronicShopper.DataAccess.Data;
+using ElectronicShopper.Library.Data;
+using ElectronicShopper.Library;
 using ElectronicShopper.Library.Models;
 using FluentValidation;
 using FluentValidation.Results;

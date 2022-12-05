@@ -1,5 +1,4 @@
-﻿using ElectronicShopper.Library.Models;
-using FluentValidation;
+﻿using FluentValidation;
 
 namespace ElectronicShopper.Library.Validators;
 
