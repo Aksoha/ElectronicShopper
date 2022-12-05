@@ -50,7 +50,11 @@ public partial class DropDownList<T> : ComponentBase, IAsyncDisposable
     private string DropdownItemInlineCss { get; set; } = "";
     private bool Expanded { get; set; }
 
-
+    
+    /// <summary>
+    /// Indicates whether component should be rendered.
+    /// </summary>
+    private bool _shouldRender = true;
     public async ValueTask DisposeAsync()
     {
         await _module.DisposeAsync();
@@ -64,10 +68,10 @@ public partial class DropDownList<T> : ComponentBase, IAsyncDisposable
             _module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./scripts/ElementDimensions.js");
     }
 
-    private string ConvertToString(T item)
+    private string? ConvertToString(T? item)
     {
         if (item is null)
-            throw new ArgumentNullException(nameof(item));
+            return null;
 
         var property = item.GetType().GetProperty(PropertyName);
         if (property is null)
@@ -118,8 +122,17 @@ public partial class DropDownList<T> : ComponentBase, IAsyncDisposable
 
     private async Task SetPopupPosition()
     {
+        
+        // turn off rendering otherwise element might be rendered as position:static on first click due to async call in this method
+        _shouldRender = false;
         var rectangle = await GetBoundingRectangle();
         DropdownItemInlineCss =
             $"position: fixed; top: {rectangle.Bottom}px; left: {rectangle.Left}px; width: {rectangle.Width}px; z-index: 1000";
+        _shouldRender = true;
+    }
+
+    protected override bool ShouldRender()
+    {
+        return _shouldRender;
     }
 }
