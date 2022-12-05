@@ -60,7 +60,7 @@ public class ProductData : IProductData
         if (category is null)
             throw new DatabaseException("Category is not present in the database");
 
-        if (product.Template is not null)
+        if (product.Template?.Id != null)
             await CreateTemplate(product.Template);
 
         var sp = _mapper.Map<ProductInsertStoredProcedure>(product);
@@ -73,7 +73,7 @@ public class ProductData : IProductData
             _logger.LogInformation("Created product {Name} with Id {Id}", product.ProductName, product.Id);
 
 
-            var p = new ProductModel { Id = id, Inventory = product.Inventory };
+            var p = new ProductModel { Id = id, Inventory = product.Inventory, ProductName = product.ProductName };
             foreach (var image in product.Images)
             {
                 await CreateImageWithoutTransaction(p, image);
