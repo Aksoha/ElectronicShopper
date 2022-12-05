@@ -7,7 +7,6 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<CreateProductModel, ProductModel>();
         CreateMap<MemoryImageModel, ProductImageModel>();
     }
 }
