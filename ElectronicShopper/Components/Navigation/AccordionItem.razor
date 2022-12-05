@@ -9,9 +9,6 @@
     }
     @Title
 </div>
-@if (Collapsed is false)
-{
-    <div class="@ContentCssClass">
-        @ChildContent
-    </div>
-}
+<div style="@(Collapsed ? "display: none" : "initial")" class="@ContentCssClass">
+    @ChildContent
+</div>
