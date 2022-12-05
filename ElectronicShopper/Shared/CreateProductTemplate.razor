@@ -1,0 +1,39 @@
+﻿@using ElectronicShopper.Library.Models
+@* name and dropdown *@
+<div class="row justify-content-center">
+    <div class="mx-0">
+        <input class="form-input w-100 mx-auto" type="text" @bind="_template.Name" placeholder="Template name"/>
+    <DropDownList T="ProductTemplateModel" DataSource="_templates"
+                  PropertyName="@nameof(ProductTemplateModel.Name)"
+                  Placeholder="Based on template" ValueChanged="BasedOnChanged"/>
+        </div>
+</div>
+@* properties *@
+<div class="row justify-content-center">
+    @foreach (var property in _template.Properties)
+    {
+        <div class="col-11 mx-0">
+            <input class="form-input w-100 mx-auto" type="text" ValueExpression="@(() => property)" value="@property"
+                   oninput="@((ChangeEventArgs e) => UpdateProperty(property, e))" placeholder="Property"/>
+        </div>
+        <div class="col-1 my-auto text-center">
+            <button class="btn btn-danger" onclick="@(() => RemoveProperty(property))">Remove</button>
+        </div>
+    }
+</div>
+@* buttons *@
+<div class="row">
+    <div class="col mx-0">
+        <div class="btn-group my-4">
+            <button class="btn btn-primary" onclick="@Create">Create template</button>
+            <button class="btn btn-secondary" onclick="@AddProperty">add property</button>
+        </div>
+    </div>
+</div>
+@* error messages *@
+<div class="row justify-content-center">
+    @foreach (var error in _errors)
+    {
+        <div class="validation-message">@error</div>
+    }
+</div>
