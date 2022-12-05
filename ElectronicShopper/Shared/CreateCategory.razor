@@ -1,0 +1,27 @@
+﻿@using ElectronicShopper.Library.Models
+@* name and dropdown *@
+<div class="row justify-content-center">
+    <div class="mx-0">
+        <input class="form-input w-100 mx-auto" type="text" @bind="_category.Name" placeholder="Category name"/>
+        @* Binding to {_parentCategory} instead of directly to _category.Parent due to nullability issues *@
+        <DropDownList T="CategoryModel" DataSource="_categories" PropertyName="@nameof(CategoryModel.Name)"
+                      @bind-Value="_parentCategory" Placeholder="Based on category">
+        </DropDownList>
+    </div>
+</div>
+@* buttons *@
+<div class="row">
+    <div class="mx-0">
+        <div class="btn-group my-4">
+            <button class="btn btn-primary" onclick="@Create">Create category</button>
+            <button class="btn btn-secondary" onclick="@RemoveParentCategory">Remove parent category</button>
+        </div>
+    </div>
+</div>
+@* error messages *@
+<div class="row justify-content-center">
+    @foreach (var error in _errors)
+    {
+        <div class="validation-message">@error</div>
+    }
+</div>
