@@ -1,4 +1,6 @@
 ﻿using System.Data;
+using System.Diagnostics;
+using System.Reflection;
 using AutoMapper;
 using Dapper;
 using ElectronicShopper.Library;
@@ -7,6 +9,7 @@ using ElectronicShopper.Library.DependencyInjection;
 using ElectronicShopper.Library.Settings;
 using ElectronicShopper.Library.Validators;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -17,19 +20,12 @@ namespace ElectronicShopper.Tests.Integration;
 [CollectionDefinition("database collection")]
 public class DatabaseFactory : ICollectionFixture<DatabaseFactory>, IDisposable
 {
-    public OrderData OrderData { get; private set; } = default!;
-    public ProductData ProductData { get; private set; } = default!;
-    public CategoryData CategoryData { get; private set; } = default!;
+    private readonly MemoryCache _cache = new(new MemoryCacheOptions());
+    private readonly IFileSystem _fileSystem = new FileSystem();
+    private IConfiguration _config = default!;
 
 
     private IMapper _mapper = default!;
-    private IConfiguration _config = default!;
-    private readonly IFileSystem _fileSystem = new FileSystem();
-    private IOptionsSnapshot<ImageStorageSettings> ImageSettings { get; set; } = default!;
-    private IOptionsSnapshot<ConnectionStringSettings> ConnectionSettings { get; set; } = default!;
-    private ConnectionStringSettings ConnectionStringSettings => ConnectionSettings.Value;
-    private ImageStorageSettings ImageStorageSettings => ImageSettings.Value;
-
 
     public DatabaseFactory()
     {
@@ -40,14 +36,95 @@ public class DatabaseFactory : ICollectionFixture<DatabaseFactory>, IDisposable
         CreateTestDirectory();
     }
 
-    public async Task ResetDatabase()
+    public OrderData OrderData { get; private set; } = default!;
+    public ProductData ProductData { get; private set; } = default!;
+    public CategoryData CategoryData { get; private set; } = default!;
+    private IOptionsSnapshot<ImageStorageSettings> ImageSettings { get; set; } = default!;
+    private IOptionsSnapshot<ConnectionStringSettings> ConnectionSettings { get; set; } = default!;
+    private ConnectionStringSettings ConnectionStringSettings => ConnectionSettings.Value;
+    private ImageStorageSettings ImageStorageSettings => ImageSettings.Value;
+
+    public void Dispose()
+    {
+        try
+        {
+            _fileSystem.DeleteDirectory($"{ImageStorageSettings.BasePath}/{ImageStorageSettings.Products}", true);
+        }
+        catch
+        {
+            // ignored, folder was not created during test
+        }
+    }
+
+
+    /// <summary>
+    ///     Resets database to it's initial state.
+    /// </summary>
+    /// <remarks>Removes all tables and reset Id counter for tables.</remarks>
+    public async Task ResetDatabaseAndClearCache()
     {
         using IDbConnection dbConnection = new SqlConnection(ConnectionStringSettings.ElectronicShopperData);
 
         var dir = Directory.GetCurrentDirectory() + "\\ClearTables.sql";
         var query = await File.ReadAllTextAsync(dir);
 
+        ResetCache();
         await dbConnection.ExecuteAsync(query);
+    }
+
+    /// <summary>
+    ///     Clear all <see cref="IMemoryCache" /> from memory.
+    /// </summary>
+    /// <exception cref="UnreachableException">
+    ///     Throw when <see cref="MemoryCache" /> does not contain expected fields.
+    ///     This exception should not be thrown unless underlying structure of <see cref="MemoryCache" /> has changed,
+    ///     which can be a case when changing NET version.
+    /// </exception>
+    /// <remarks>
+    ///     Calling this method is with conjunction of <see cref="ResetDatabaseAndClearCache" /> required after each test to
+    ///     ensure that there are no objects from previous test.
+    ///     Not calling this method after a test could cause a scenario where stored in the database and cache are different
+    ///     (even though Id's of object are the same).
+    /// </remarks>
+    public void ResetCache()
+    {
+        // NET7: in new version reflections are not needed anymore as long as concrete memory type is provided
+
+        // _cache.Clear();
+        // return;
+
+
+        // to clear cache from MemoryCache we need to access Clear method which is contained EntriesCollection property
+        var cacheType = _cache.GetType();
+
+        // get entries collection propertyField of cache
+        const string entriesCollectionPropertyName = "EntriesCollection";
+        var cacheEntriesCollectionProperty = cacheType.GetProperty(entriesCollectionPropertyName,
+            BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.NonPublic | BindingFlags.Public);
+
+        if (cacheEntriesCollectionProperty is null)
+            throw new UnreachableException(
+                $"Expected type \"{cacheType}\" to have property named \"{entriesCollectionPropertyName}\" but it was not found");
+
+
+        // get field that holds cache, this should be ICollection
+        var innerCacheObject = cacheEntriesCollectionProperty.GetValue(_cache);
+        if (innerCacheObject is null)
+            throw new UnreachableException("inner cache object was not initialized");
+
+
+        // get Clear method of ICollection
+        const string clearMethodName = "Clear";
+        var clearMethod = innerCacheObject.GetType()
+            .GetMethod(clearMethodName, BindingFlags.Instance | BindingFlags.Public);
+
+        if (clearMethod is null)
+            throw new UnreachableException(
+                $"Expected type \"{innerCacheObject.GetType()}\" to have property named \"{clearMethodName}\" but it was not found");
+
+
+        // clear cache
+        clearMethod.Invoke(innerCacheObject, null);
     }
 
     private void CreateConfig()
@@ -56,7 +133,6 @@ public class DatabaseFactory : ICollectionFixture<DatabaseFactory>, IDisposable
             .AddJsonFile("appsettings.UnitTest.json")
             .AddUserSecrets(typeof(DatabaseFactory).Assembly, true)
             .Build();
-        
     }
 
     private void ConfigureMapper()
@@ -73,13 +149,15 @@ public class DatabaseFactory : ICollectionFixture<DatabaseFactory>, IDisposable
         var imageValidator = new ProductImageCreateValidator();
         var productValidator = new ProductCreateValidator(imageValidator);
         var templateValidator = new ProductTemplateCreateValidator();
-        var logger = Mock.Of<ILogger<ProductData>>();
+        var productDataLogger = Mock.Of<ILogger<ProductData>>();
+        var categoryDataLogger = Mock.Of<ILogger<CategoryData>>();
+
 
         var sql = new SqlDataAccess();
         OrderData = new OrderData(sql, mapper, ConnectionSettings, orderValidator);
-        CategoryData = new CategoryData(sql, mapper, ConnectionSettings, categoryValidator);
+        CategoryData = new CategoryData(sql, mapper, ConnectionSettings, categoryValidator, _cache, categoryDataLogger);
         ProductData = new ProductData(sql, mapper, CategoryData, ConnectionSettings, ImageSettings, _fileSystem,
-            productValidator, imageValidator, templateValidator, logger);
+            productValidator, imageValidator, templateValidator, productDataLogger);
     }
 
     private void ConfigureSettings()
@@ -124,17 +202,5 @@ public class DatabaseFactory : ICollectionFixture<DatabaseFactory>, IDisposable
             _fileSystem.DeleteDirectory(ImageStorageSettings.BasePath, true);
 
         _fileSystem.CreateDirectory($"{ImageStorageSettings.BasePath}/{ImageStorageSettings.Products}");
-    }
-
-    public void Dispose()
-    {
-        try
-        {
-            _fileSystem.DeleteDirectory($"{ImageStorageSettings.BasePath}/{ImageStorageSettings.Products}", true);
-        }
-        catch
-        {
-            // ignored, folder was not created during test
-        }
     }
 }

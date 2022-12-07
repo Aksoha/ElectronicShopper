@@ -28,19 +28,19 @@ public interface ICategoryData
     /// <summary>
     ///     Retrieve all categories from the database.
     /// </summary>
-    Task<List<CategoryModel>> GetAll();
+    Task<IEnumerable<CategoryModel>> GetAll();
 
 
     /// <summary>
     ///     Retrieve all categories that do not have a child category.
     /// </summary>
-    Task<List<CategoryModel>> GetRootCategories();
+    Task<IEnumerable<CategoryModel>> GetRootCategories();
 
 
     /// <summary>
     ///     Retrieve all categories that do not have a parent category.
     /// </summary>
-    Task<List<CategoryModel>> GetLeafCategories();
+    Task<IEnumerable<CategoryModel>> GetLeafCategories();
 
     /// <summary>
     ///     Updates category.

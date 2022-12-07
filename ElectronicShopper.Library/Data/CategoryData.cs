@@ -1,22 +1,39 @@
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using ElectronicShopper.Library.Models.Internal;
 using ElectronicShopper.Library.StoredProcedures.Category;
 using FluentValidation;
 using Microsoft.Data.SqlClient;
 using IDbEntity = ElectronicShopper.Library.Models.IDbEntity;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace ElectronicShopper.Library.Data;
 
 public class CategoryData : ICategoryData
 {
     private readonly IValidator<CategoryCreateModel> _categoryValidator;
+    private readonly IMemoryCache _cache;
+    private readonly ILogger<CategoryData> _logger;
     private readonly string _connectionString;
     private readonly IMapper _mapper;
     private readonly ISqlDataAccess _sql;
 
+    /// <summary>
+    /// Key value used to cache <see cref="CategoryModel"/>.
+    /// </summary>
+    private const string CacheName = "CategoryData";
+
+    /// <summary>
+    /// Time after which cache will be removed.
+    /// </summary>
+    private readonly TimeSpan _cacheTime = TimeSpan.FromDays(1);
+
+
     public CategoryData(ISqlDataAccess sql, IMapper mapper, IOptionsSnapshot<ConnectionStringSettings> settings,
-        IValidator<CategoryCreateModel> categoryValidator)
+        IValidator<CategoryCreateModel> categoryValidator, IMemoryCache cache, ILogger<CategoryData> logger)
     {
+        ArgumentNullException.ThrowIfNull(cache);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(mapper);
         ArgumentNullException.ThrowIfNull(sql);
@@ -25,22 +42,31 @@ public class CategoryData : ICategoryData
         _sql = sql;
         _mapper = mapper;
         _categoryValidator = categoryValidator;
+        _cache = cache;
+        _logger = logger;
         _connectionString = settings.Value.ElectronicShopperData;
     }
 
     public async Task Create(CategoryCreateModel category)
     {
+        // validate if model passes all criteria to be inserted
         if (category.ParentId is not null) await ThrowIfCategoryDoesNotExist(category.ParentId);
         await _categoryValidator.ValidateAndThrowAsync(category);
 
-        var sp = _mapper.Map<CategoryInsertStoredProcedure>(category);
 
+        // insert into database
+        var sp = _mapper.Map<CategoryInsertStoredProcedure>(category);
         try
         {
             _sql.StartTransaction(_connectionString);
             var id = await _sql.SaveData<CategoryInsertStoredProcedure, int>(sp);
             _sql.CommitTransaction();
             category.Id = id;
+            _logger.LogInformation("Created new row in category table with Id {Id} and name {Name}", category.Id,
+                category.Name);
+            var c = _mapper.Map<CategoryModel>(category);
+            await SetParent(c);
+            AddCategoryToCache(c);
         }
         catch (SqlException)
         {
@@ -51,6 +77,16 @@ public class CategoryData : ICategoryData
 
     public async Task<CategoryModel?> Get(int id)
     {
+        // try to get category from cache
+        var cachedCategory = GetCategoryFromCache(id);
+        if (cachedCategory is not null)
+        {
+            _logger.LogDebug("Fetched category with Id {Id} and Name {Name} from cache", id,
+                cachedCategory.Name);
+            return cachedCategory;
+        }
+
+        // try to get category from database
         var sp = _mapper.Map<CategoryGetByIdStoredProcedure>(id);
         CategoryDbModel? result;
         try
@@ -65,15 +101,34 @@ public class CategoryData : ICategoryData
             throw;
         }
 
-        var output = MapToSingle(result);
-        if (output is null)
+        // category not found in cache and database
+        if (result is null)
+        {
+            _logger.LogDebug("Category with Id {Id} was not found", id);
             return null;
+        }
+
+        // convert database model and cache category
+        var output = MapToSingle(result);
+        _logger.LogDebug("Fetched category with Id {Id} and Name {Name} from database", id,
+            output.Name);
         await SetParent(output);
+        AddCategoryToCache(output);
         return output;
     }
 
-    public async Task<List<CategoryModel>> GetAll()
+    public async Task<IEnumerable<CategoryModel>> GetAll()
     {
+        // try to get categories from cache
+        var cachedCategories = GetCategoriesFromCache();
+        if (cachedCategories is not null)
+        {
+            _logger.LogDebug("Fetched all categories from cache");
+            return cachedCategories;
+        }
+
+
+        // try to get category from database
         IEnumerable<CategoryDbModel> result;
         try
         {
@@ -82,6 +137,7 @@ public class CategoryData : ICategoryData
                 await _sql.LoadData<CategoryGetAllStoredProcedure, CategoryDbModel>(
                     new CategoryGetAllStoredProcedure());
             _sql.CommitTransaction();
+            _logger.LogDebug("Fetched all categories from database");
         }
         catch (SqlException)
         {
@@ -89,58 +145,49 @@ public class CategoryData : ICategoryData
             throw;
         }
 
+
+        // convert database models and cache categories
         var output = MapToMany(result);
+        foreach (var item in output)
+            await SetParent(item);
+        
+        AddCategoryToCache(output);
         return output;
     }
 
-    public async Task<List<CategoryModel>> GetRootCategories()
+    public async Task<IEnumerable<CategoryModel>> GetRootCategories()
     {
-        IEnumerable<CategoryDbModel> result;
-        try
-        {
-            _sql.StartTransaction(_connectionString);
-            result = await _sql.LoadData<CategoryGetRootStoredProcedure, CategoryDbModel>(
-                new CategoryGetRootStoredProcedure());
-            _sql.CommitTransaction();
-        }
-        catch (SqlException)
-        {
-            _sql.RollbackTransaction();
-            throw;
-        }
-
-        var output = MapToMany(result);
-        return output;
+        var categories = await GetAll();
+        return categories.Where(x => x.Parent is null);
     }
 
-    public async Task<List<CategoryModel>> GetLeafCategories()
+
+    public async Task<IEnumerable<CategoryModel>> GetLeafCategories()
     {
-        IEnumerable<CategoryDbModel> result;
-        try
+        var categories = (await GetAll()).ToList();
+        HashSet<CategoryModel> remainingNodes = new(categories);
+        foreach (var parent in
+                 from category in categories
+                 select category.Parent?.Id
+                 into percentId
+                 where remainingNodes.Any(x => x.Id == percentId)
+                 select remainingNodes.Single(x => x.Id == percentId))
         {
-            _sql.StartTransaction(_connectionString);
-            result = await _sql.LoadData<CategoryGetAllLeafsStoredProcedure, CategoryDbModel>(
-                new CategoryGetAllLeafsStoredProcedure());
-            _sql.CommitTransaction();
-        }
-        catch (SqlException)
-        {
-            _sql.RollbackTransaction();
-            throw;
+            remainingNodes.Remove(parent);
         }
 
-        var output = MapToMany(result);
-        foreach (var category in output) await SetParent(category);
-
-        return output;
+        return remainingNodes;
     }
 
     public async Task Update(CategoryModel oldCategory, CategoryModel newCategory)
     {
+        // validate if model passes all criteria to be inserted
         await ThrowIfCategoryDoesNotExist(oldCategory);
         if (newCategory.Parent is not null)
             await ThrowIfCategoryDoesNotExist(newCategory.Parent);
 
+
+        // update category
         var sp = new CategoryUpdateStoredProcedure
         {
             Id = (int)oldCategory.Id!,
@@ -171,11 +218,13 @@ public class CategoryData : ICategoryData
     /// <param name="category">Category which parents are to be set.</param>
     private async Task SetParent(CategoryModel category)
     {
+        // get parent of category from the database
         var sp = _mapper.Map<CategoryGetAncestorStoredProcedure>(category);
         _sql.StartTransaction(_connectionString);
         var result = (await _sql.LoadData<CategoryGetAncestorStoredProcedure, CategoryDbModel>(sp)).FirstOrDefault();
         _sql.CommitTransaction();
 
+        // recursively set parent of category
         category.Parent = MapToSingle(result);
         if (category.Parent is not null) await SetParent(category.Parent);
     }
@@ -218,8 +267,75 @@ public class CategoryData : ICategoryData
     ///     Maps database model to regular models.
     /// </summary>
     /// <param name="dbItem">Item to map.</param>
+    [return: NotNullIfNotNull("dbItem")]
     private CategoryModel? MapToSingle(CategoryDbModel? dbItem)
     {
         return _mapper.Map<CategoryModel>(dbItem);
+    }
+
+
+    /// <summary>
+    /// Creates new collection of items that is stored in the memory.
+    /// </summary>
+    /// <returns>Newly created collection.</returns>
+    private ConcurrentBag<CategoryModel> CreateCacheIfItNotExist()
+    {
+        var cachedCategories = GetCategoriesFromCache();
+        if (cachedCategories is not null) return cachedCategories;
+
+        cachedCategories = new ConcurrentBag<CategoryModel>();
+        _cache.Set(CacheName, cachedCategories, _cacheTime);
+        _logger.LogDebug("Created new category collection with hash {Hash} in cache", cachedCategories.GetHashCode());
+
+        return cachedCategories;
+    }
+
+    /// <summary>
+    /// Adds <see cref="CategoryModel"/> to cache.
+    /// </summary>
+    /// <param name="category">Category to be added.</param>
+    private void AddCategoryToCache(CategoryModel category)
+    {
+        var cachedCategories = CreateCacheIfItNotExist();
+        if (cachedCategories.Contains(category)) return;
+
+        cachedCategories.Add(category);
+        _logger.LogDebug("Added category with Id {Id} to cache", category.Id);
+    }
+
+
+    /// <summary>
+    /// Adds <see cref="CategoryModel"/> to cache.
+    /// </summary>
+    /// <param name="categories">Categories to be added.</param>
+    private void AddCategoryToCache(IEnumerable<CategoryModel> categories)
+    {
+        var cachedCategories = CreateCacheIfItNotExist();
+        foreach (var category in categories)
+        {
+            if (cachedCategories.Contains(category)) continue;
+            cachedCategories.Add(category);
+        }
+    }
+
+    /// <summary>
+    /// Retrieves <see cref="CategoryModel"/> from cache.
+    /// </summary>
+    /// <param name="id">Id of category to retrieve.</param>
+    /// <returns><see cref="CategoryModel"/> if object was found, otherwise <see langoword="null"/>.</returns>
+    private CategoryModel? GetCategoryFromCache(int id)
+    {
+        var cachedCategories = GetCategoriesFromCache();
+        return cachedCategories?.SingleOrDefault(x => x.Id == id);
+    }
+
+
+    /// <summary>
+    /// Retrieves collection of <see cref="CategoryModel"/> from cache.
+    /// </summary>
+    /// <returns>Collection if cache was set or not expired otherwise <see langoword="null"/>.</returns>
+    private ConcurrentBag<CategoryModel>? GetCategoriesFromCache()
+    {
+        return _cache.Get<ConcurrentBag<CategoryModel>>(CacheName);
     }
 }

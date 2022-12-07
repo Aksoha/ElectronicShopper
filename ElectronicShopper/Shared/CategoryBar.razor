@@ -6,18 +6,21 @@
 
 
 <div class="d-flex justify-content-center category-bar">
-    @foreach (var category in _categories)
+    @if (_categories is not null)
     {
-        <h3 class="align-self-center category-nav" onclick="@(() => OnCategorySelected(category))">
-            @category.Name
-        </h3>
+        @foreach (var category in _categories)
+        {
+            <h3 class="align-self-center category-nav" onclick="@(() => OnCategorySelected(category))">
+                @category.Name
+            </h3>
+        }
     }
 </div>
 
 
 @code {
 
-    List<CategoryModel> _categories = new();
+    IEnumerable<CategoryModel>? _categories;
 
     protected override async Task OnInitializedAsync()
     {
@@ -29,5 +32,5 @@
     {
         NavManager.NavigateTo($"/c/{selectedCategory.Id}");
     }
-    
+
 }

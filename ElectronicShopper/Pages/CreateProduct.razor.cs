@@ -24,7 +24,7 @@ public partial class CreateProduct : ComponentBase
     /// <summary>
     ///     List of all categories present in the database.
     /// </summary>
-    private List<CategoryModel> _categories = default!;
+    private IEnumerable<CategoryModel> _categories = default!;
 
 
     /// <summary>

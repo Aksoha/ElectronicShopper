@@ -19,7 +19,7 @@ public class OrderDataTests : IAsyncLifetime
         _orderData = dbFactory.OrderData;
         _productData = dbFactory.ProductData;
         _categoryData = dbFactory.CategoryData;
-        _resetDatabase = dbFactory.ResetDatabase;
+        _resetDatabase = dbFactory.ResetDatabaseAndClearCache;
     }
 
 

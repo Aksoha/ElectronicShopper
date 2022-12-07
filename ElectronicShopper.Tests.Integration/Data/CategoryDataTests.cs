@@ -10,11 +10,12 @@ public class CategoryDataTests : IAsyncLifetime
 {
     private readonly CategoryData _data;
     private readonly Func<Task> _resetDatabase;
-
+    private readonly Action _resetCache;
     public CategoryDataTests(DatabaseFactory dbFactory)
     {
         _data = dbFactory.CategoryData;
-        _resetDatabase = dbFactory.ResetDatabase;
+        _resetDatabase = dbFactory.ResetDatabaseAndClearCache;
+        _resetCache = dbFactory.ResetCache;
     }
 
     public Task InitializeAsync()
@@ -143,7 +144,7 @@ public class CategoryDataTests : IAsyncLifetime
 
         // Act
         var expected = rootCategories.Count;
-        var result = await _data.GetRootCategories();
+        var result = (await _data.GetRootCategories()).ToList();
 
         
         // Assert
@@ -277,28 +278,53 @@ public class CategoryDataTests : IAsyncLifetime
         Assert.Equal(expected, actual);
     }
 
-    [Fact]
-    public async Task GetAll()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetAll(bool useCachedData)
     {
         // Arrange
         var createdCategories = new List<CategoryModel>();
         for (var i = 0; i < 20; i++)
         {
             var category = CategoryGenerator.Generate();
+            var parentCategory = CategoryGenerator.Generate();
+
+            await _data.Create(parentCategory);
+            category.ParentId = parentCategory.Id;
             await _data.Create(category);
-            createdCategories.Add(new CategoryModel { Id = category.Id, Name = category.Name });
+
+            var createdCategory = await _data.Get((int)category.Id!);
+            createdCategories.Add(createdCategory!);
         }
 
+        if (useCachedData is false) _resetCache();
+        
+        
+        
         // Act
-        var expected = createdCategories.Count;
-        var result = await _data.GetAll();
+        var expected = createdCategories.Count * 2;
+        var result = (await _data.GetAll()).ToList();
 
-
+        
         // Assert
-        var actual = createdCategories.Select(x => x.Id)
-            .Intersect(
-                result.Select(x => x.Id)).Count();
+        var actual = result.Count;
 
         Assert.Equal(expected, actual);
+
+        
+        var remainingCategories = new HashSet<CategoryModel>(result);
+        foreach (var createdCategory in createdCategories)
+        {
+            var p = remainingCategories.Single(x => x.Id == createdCategory.Id);
+            var p2 = remainingCategories.Single(x => x.Id == createdCategory.Parent!.Id);
+            Assert.Equal(createdCategory.Name, p.Name);
+            Assert.Equal(createdCategory.Parent!.Id, p.Parent!.Id);
+            Assert.Equal(createdCategory.Parent.Name, p.Parent.Name);
+            remainingCategories.Remove(p);
+            remainingCategories.Remove(p2);
+        }
+        
+        Assert.Empty(remainingCategories);
     }
 }

@@ -125,6 +125,8 @@ public class DatabaseMappingProfile : Profile
         
         CreateMap<MemoryImageModel, ProductImageModel>();
 
+        CreateMap<CategoryCreateModel, CategoryModel>();
+
     }
 
     private void MapInventoryModels()

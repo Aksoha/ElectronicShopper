@@ -17,7 +17,7 @@ public class ProductDataTests : IAsyncLifetime
     {
         _productData = dbFactory.ProductData;
         _categoryData = dbFactory.CategoryData;
-        _resetDatabase = dbFactory.ResetDatabase;
+        _resetDatabase = dbFactory.ResetDatabaseAndClearCache;
     }
 
     public Task InitializeAsync()

@@ -22,6 +22,8 @@ public static class DatabaseServiceExtensions
         services.AddTransient<IOrderData, OrderData>();
         services.AddTransient<IProductData, ProductData>();
 
+        services.AddMemoryCache();
+        
         return services;
     }
 }
