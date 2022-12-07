@@ -48,7 +48,7 @@ public partial class CreateProduct : ComponentBase
     /// <summary>
     ///     List of all templates present in the database.
     /// </summary>
-    private List<ProductTemplateModel> _templates = default!;
+    private IEnumerable<ProductTemplateModel> _templates = default!;
 
 
     /// <summary>

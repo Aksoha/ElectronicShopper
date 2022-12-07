@@ -270,21 +270,21 @@ public class ProductDataTests : IAsyncLifetime
         var createdProducts = new List<ProductModel>();
         for (var i = 0; i < 20; i++)
         {
-            var r = new Random();
             var product = await CreateProductWithDependencies();
+            product = (await _productData.Get((int)product.Id!))!;
             var images = ProductGenerator.GenerateImages();
 
             foreach (var image in images)
             {
                 await _productData.CreateImage(product, image);
             }
-            product.Images = await _productData.GetProductImages(product);
+            product.Images = (await _productData.GetProductImages(product)).ToList();
             createdProducts.Add(product);
         }
 
 
         // Act
-        var result = await _productData.GetAll();
+        var result = (await _productData.GetAll()).ToList();
 
 
         // Assert
@@ -351,7 +351,7 @@ public class ProductDataTests : IAsyncLifetime
 
 
         // Act
-        var result = await _productData.GetAllTemplates();
+        var result = (await _productData.GetAllTemplates()).ToList();
 
 
         // Assert
@@ -378,7 +378,7 @@ public class ProductDataTests : IAsyncLifetime
 
 
         // Act
-        var result = await _productData.GetProductImages(product);
+        var result = (await _productData.GetProductImages(product)).ToList();
 
         Assert.True(images.Count == result.Count);
         foreach (var actual in result)
@@ -400,6 +400,7 @@ public class ProductDataTests : IAsyncLifetime
         var expected = new InventoryModel { Price = (decimal)2.12, Quantity = 14, Reserved = 1 };
 
         // Act
+        product = (await _productData.Get((int)product.Id!))!;
         await _productData.UpdateInventory(product, expected);
         var actual = (await _productData.Get((int)product.Id!))!.Inventory;
 
@@ -454,7 +455,7 @@ public class ProductDataTests : IAsyncLifetime
     /// <summary>
     ///     Creates and saves product with random properties into the database.
     /// </summary>
-    /// <returns>Newly created <see cref="ProductModel" /></returns>
+    /// <returns>Copy of newly created <see cref="ProductModel" /></returns>
     /// <remarks>
     ///     Does not set <see cref="ProductModel.Images" />, <see cref="ProductModel.Discontinued" /> properties.
     /// </remarks>

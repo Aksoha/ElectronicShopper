@@ -157,7 +157,7 @@ public class DatabaseFactory : ICollectionFixture<DatabaseFactory>, IDisposable
         OrderData = new OrderData(sql, mapper, ConnectionSettings, orderValidator);
         CategoryData = new CategoryData(sql, mapper, ConnectionSettings, categoryValidator, _cache, categoryDataLogger);
         ProductData = new ProductData(sql, mapper, CategoryData, ConnectionSettings, ImageSettings, _fileSystem,
-            productValidator, imageValidator, templateValidator, productDataLogger);
+            productValidator, imageValidator, templateValidator, productDataLogger, _cache);
     }
 
     private void ConfigureSettings()

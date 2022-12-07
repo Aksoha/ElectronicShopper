@@ -58,7 +58,7 @@ public interface IProductData
     /// <summary>
     ///     Retrieve all products.
     /// </summary>
-    Task<List<ProductModel>> GetAll();
+    Task<IEnumerable<ProductModel>> GetAll();
 
     /// <summary>
     ///     Retrieve product template.
@@ -69,13 +69,13 @@ public interface IProductData
     /// <summary>
     ///     Retrieve all templates.
     /// </summary>
-    Task<List<ProductTemplateModel>> GetAllTemplates();
+    Task<IEnumerable<ProductTemplateModel>> GetAllTemplates();
 
     /// <summary>
     ///     Retrieve all product images.
     /// </summary>
     /// <param name="product">Product who's images are to be retrieved.</param>
-    Task<List<ProductImageModel>> GetProductImages(ProductModel product);
+    Task<IEnumerable<ProductImageModel>> GetProductImages(ProductModel product);
 
     /// <summary>
     ///     Updates existing inventory.

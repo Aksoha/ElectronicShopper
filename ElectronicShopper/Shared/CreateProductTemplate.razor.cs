@@ -27,7 +27,7 @@ public partial class CreateProductTemplate : ComponentBase
     /// <summary>
     ///     List of all templates
     /// </summary>
-    private List<ProductTemplateModel> _templates = default!;
+    private IEnumerable<ProductTemplateModel> _templates = default!;
 
     /// <summary>
     ///     Event that is triggered when template is created. This property is required because
