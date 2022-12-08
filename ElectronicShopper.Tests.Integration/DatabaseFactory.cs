@@ -88,43 +88,7 @@ public class DatabaseFactory : ICollectionFixture<DatabaseFactory>, IDisposable
     /// </remarks>
     public void ResetCache()
     {
-        // NET7: in new version reflections are not needed anymore as long as concrete memory type is provided
-
-        // _cache.Clear();
-        // return;
-
-
-        // to clear cache from MemoryCache we need to access Clear method which is contained EntriesCollection property
-        var cacheType = _cache.GetType();
-
-        // get entries collection propertyField of cache
-        const string entriesCollectionPropertyName = "EntriesCollection";
-        var cacheEntriesCollectionProperty = cacheType.GetProperty(entriesCollectionPropertyName,
-            BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.NonPublic | BindingFlags.Public);
-
-        if (cacheEntriesCollectionProperty is null)
-            throw new UnreachableException(
-                $"Expected type \"{cacheType}\" to have property named \"{entriesCollectionPropertyName}\" but it was not found");
-
-
-        // get field that holds cache, this should be ICollection
-        var innerCacheObject = cacheEntriesCollectionProperty.GetValue(_cache);
-        if (innerCacheObject is null)
-            throw new UnreachableException("inner cache object was not initialized");
-
-
-        // get Clear method of ICollection
-        const string clearMethodName = "Clear";
-        var clearMethod = innerCacheObject.GetType()
-            .GetMethod(clearMethodName, BindingFlags.Instance | BindingFlags.Public);
-
-        if (clearMethod is null)
-            throw new UnreachableException(
-                $"Expected type \"{innerCacheObject.GetType()}\" to have property named \"{clearMethodName}\" but it was not found");
-
-
-        // clear cache
-        clearMethod.Invoke(innerCacheObject, null);
+        _cache.Clear();
     }
 
     private void CreateConfig()

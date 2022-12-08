@@ -11,9 +11,8 @@ namespace ElectronicShopper.Library.Services;
 public class CartService : ICartService
 {
     public event Action? CartCountChange;
-    
-    [ValidateComplexType]
-    private List<OrderDetailModel> Products { get; set; } = new();
+
+    [ValidateComplexType] private List<OrderDetailModel> Products { get; set; } = new();
     private readonly IOrderData _orderData;
     private readonly IHttpContextAccessor _accessor;
     private readonly ApplicationUserManager _userManager;
@@ -24,6 +23,11 @@ public class CartService : ICartService
     public CartService(IOrderData orderData, IHttpContextAccessor accessor, ApplicationUserManager userManager,
         ILocalStorageService localStorage)
     {
+        ArgumentNullException.ThrowIfNull(localStorage);
+        ArgumentNullException.ThrowIfNull(userManager);
+        ArgumentNullException.ThrowIfNull(accessor);
+        ArgumentNullException.ThrowIfNull(orderData);
+
         _orderData = orderData;
         _accessor = accessor;
         _userManager = userManager;
@@ -64,7 +68,9 @@ public class CartService : ICartService
 
     public async Task Checkout()
     {
-        var loggedUser = await _userManager.GetUserAsync(_accessor.HttpContext?.User);
+        ArgumentNullException.ThrowIfNull(_accessor.HttpContext);
+
+        var loggedUser = await _userManager.GetUserAsync(_accessor.HttpContext.User);
         if (loggedUser is null)
             throw new ArgumentNullException(nameof(loggedUser));
 
@@ -75,6 +81,8 @@ public class CartService : ICartService
         };
 
         await _orderData.Create(order);
+
+
         Clear();
     }
 
