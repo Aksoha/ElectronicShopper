@@ -2,8 +2,6 @@
 
 public class FileSystem : IFileSystem
 {
-    
-
     public async Task Save(string path, Stream stream)
     {
         await using var fileStream = File.Create(path);

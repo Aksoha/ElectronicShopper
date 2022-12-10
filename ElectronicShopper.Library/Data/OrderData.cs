@@ -28,17 +28,19 @@ public class OrderData : IOrderData
 
     public async Task Create(OrderModel order)
     {
+        // validate if model passes all criteria to be inserted
         await _validator.ValidateAndThrowAsync(order);
 
+        
         var spOrder = _mapper.Map<OrderInsertStoredProcedure>(order);
-
-
         DatabaseDateTimeModel result;
         try
         {
+            // add order model to database
             _sql.StartTransaction(_connectionString);
             result = await _sql.SaveData<OrderInsertStoredProcedure, DatabaseDateTimeModel>(spOrder);
 
+            // add order details to database
             foreach (var orderDetail in order.PurchasedProducts)
             {
                 var spOrderDetail = _mapper.Map<OrderDetailsInsertStoredProcedure>(orderDetail);

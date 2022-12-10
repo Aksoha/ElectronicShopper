@@ -124,6 +124,7 @@ public class ProductData : IProductData
     {
         try
         {
+            // add to database
             _sql.StartTransaction(_connectionString);
             await CreateTemplateWithoutTransaction(template);
             _sql.CommitTransaction();

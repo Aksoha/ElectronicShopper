@@ -3,6 +3,9 @@ using System.Text.RegularExpressions;
 
 namespace ElectronicShopper.Library.Validators;
 
+/// <summary>
+///     A rule validating whether string will be accepted by the database as a password.
+/// </summary>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
 public partial class PasswordValidationAttribute : ValidationAttribute
 {

@@ -3,6 +3,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ElectronicShopper.Library.Identity;
 
+/// <summary>
+///     Provides the APIs for managing user in a persistence store.
+/// </summary>
 public sealed class ApplicationUserManager : UserManager<ApplicationUser>
 {
     public ApplicationUserManager(IUserStore<ApplicationUser> store, IOptions<IdentityOptions> optionsAccessor,

@@ -3,7 +3,8 @@
 namespace ElectronicShopper.Library.Validators;
 
 /// <summary>
-/// Validates <see cref="ProductTemplateModel"/> for insert into database.
+///     A set of rules validating whether <see cref="ProductTemplateModel" /> can be used for inserting new product
+///     template into the database.
 /// </summary>
 public class ProductTemplateCreateValidator : AbstractValidator<ProductTemplateModel>
 {

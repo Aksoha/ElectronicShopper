@@ -7,6 +7,9 @@ using ElectronicShopper.Library.StoredProcedures.Product;
 
 namespace ElectronicShopper.Library.DependencyInjection;
 
+/// <summary>
+///     Maps models for use by the <see cref="Mapper" />.
+/// </summary>
 public class DatabaseMappingProfile : Profile
 {
     public DatabaseMappingProfile()
@@ -41,7 +44,7 @@ public class DatabaseMappingProfile : Profile
         CreateMap<int, CategoryGetByIdStoredProcedure>()
             .ConvertUsing(x => new CategoryGetByIdStoredProcedure { Id = x });
     }
-    
+
 
     private void MapProductModels()
     {
@@ -81,7 +84,7 @@ public class DatabaseMappingProfile : Profile
             .ForMember(dest => dest.ProductId,
                 act => act
                     .MapFrom(x => x.Id));
-        
+
         CreateMap<ProductModel, ProductInsertStoredProcedure>()
             .ForMember(dest => dest.CategoryId,
                 act => act
@@ -94,8 +97,8 @@ public class DatabaseMappingProfile : Profile
             .ForMember(dest => dest.ProductTemplateId,
                 act => act
                     .MapFrom(x => x.Id))
-            .ForMember(dest => dest.Properties, 
-                act  => act
+            .ForMember(dest => dest.Properties,
+                act => act
                     .Ignore());
 
         CreateMap<ProductTemplateModel, ProductTemplateInsertStoredProcedure>()
@@ -103,14 +106,13 @@ public class DatabaseMappingProfile : Profile
                 act => act
                     .MapFrom((x, _) => JsonSerializer.Serialize(x.Properties)));
 
-        
+
         CreateMap<ProductModel, ProductImageInsertStoredProcedure>()
             .ForMember(dest => dest.ProductId,
                 act => act
                     .MapFrom(x => x.Id));
 
         CreateMap<ProductImageModel, ProductImageInsertStoredProcedure>();
-
 
 
         CreateMap<ProductInsertModel, ProductInsertStoredProcedure>()
@@ -122,11 +124,10 @@ public class DatabaseMappingProfile : Profile
                     .MapFrom((x, _) => x.Properties.Count == 0 ? null : JsonSerializer.Serialize(x.Properties)));
 
         CreateMap<MemoryImageModel, ProductImageInsertStoredProcedure>();
-        
+
         CreateMap<MemoryImageModel, ProductImageModel>();
 
         CreateMap<CategoryCreateModel, CategoryModel>();
-
     }
 
     private void MapInventoryModels()
@@ -139,12 +140,11 @@ public class DatabaseMappingProfile : Profile
                     .MapFrom(x => x.QuantityReserved));
 
 
-
         CreateMap<ProductModel, InventoryGetByProductIdStoredProcedure>()
             .ForMember(dest => dest.ProductId,
                 act => act
                     .MapFrom(x => x.Id));
-        
+
 
         CreateMap<InventoryModel, InventoryInsertStoredProcedure>()
             .ForMember(dest => dest.QuantityAvailable,
@@ -165,7 +165,6 @@ public class DatabaseMappingProfile : Profile
             .ForMember(dest => dest.ProductId,
                 act => act
                     .MapFrom(x => x.Id));
-
     }
 
     private void MapOrderModels()

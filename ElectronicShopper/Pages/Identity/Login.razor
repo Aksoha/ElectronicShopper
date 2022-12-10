@@ -1,96 +1,33 @@
 ﻿@page "/login"
-@using System.Security.Authentication
-@using ElectronicShopper.Library
-@using ElectronicShopper.Library.Identity
-@using ElectronicShopper.Library.Models
-@using Microsoft.AspNetCore.Identity
-@using AuthorizationMiddleware = ElectronicShopper.Middleware.AuthorizationMiddleware
-@inject Navigation NavManager
-@inject UserManager<ApplicationUser> UserManager
-@inject SignInManager<ApplicationUser> SignInManager
-
 <PageTitle>Login</PageTitle>
 
 
-    <div class="d-flex flex-column align-items-center my-5">
-        <div class="row justify-content-center gy-5">
-            <EditForm Model="@_loginModel" OnValidSubmit="Authenticate"  class="col-auto login-form">
-                <DataAnnotationsValidator/>
-   
-                <h2>Login</h2>
-                <InputText class="form-input login-input" id="email" @bind-Value="_loginModel.Email" placeholder="Email"/>
-                <div class="align-self-center mx-auto">
-                    <ValidationMessage For="@(() => _loginModel.Email)"/>
-                </div>
-                <InputText class="form-input login-input" id="password" @bind-Value="_loginModel.Password" type="password" placeholder="Password"/>
-                <div class="align-self-center mx-auto">
-                    <ValidationMessage For="@(() => _loginModel.Password)"/>
-                </div>
-                <a class="nav-link login-nav-link" href="@ForgotPasswordUrl">Forgot Password</a>
-                <input id="remember-me" type="checkbox" checked="@_loginModel.RememberMe">
-                <label for="remember-me">Remember me</label>
-                @if (string.IsNullOrWhiteSpace(_errorMessage) == false)
-                {
-                    <div class="validation-message">@_errorMessage</div>
-                }
-                <button class="form-confirm-btn login-btn" type="submit">Login</button>
-            </EditForm>
-            <div class="col-auto">
-                <h2>Do not have an account?</h2>
-                <button class="form-confirm-btn login-btn" onclick="@(() => NavManager.NavigateTo("/register"))">Register</button>
+<div class="d-flex flex-column align-items-center my-5">
+    <div class="row justify-content-center gy-5">
+        <EditForm Model="@_loginModel" OnValidSubmit="Authenticate" class="col-auto login-form">
+            <DataAnnotationsValidator/>
+
+            <h2>Login</h2>
+            <InputText class="form-input login-input" id="email" @bind-Value="_loginModel.Email" placeholder="Email"/>
+            <div class="align-self-center mx-auto">
+                <ValidationMessage For="@(() => _loginModel.Email)"/>
             </div>
+            <InputText class="form-input login-input" id="password" @bind-Value="_loginModel.Password" type="password" placeholder="Password"/>
+            <div class="align-self-center mx-auto">
+                <ValidationMessage For="@(() => _loginModel.Password)"/>
+            </div>
+            <a class="nav-link login-nav-link" href="@ForgotPasswordUrl">Forgot Password</a>
+            <input id="remember-me" type="checkbox" checked="@_loginModel.RememberMe">
+            <label for="remember-me">Remember me</label>
+            @if (string.IsNullOrWhiteSpace(_errorMessage) == false)
+            {
+                <div class="validation-message">@_errorMessage</div>
+            }
+            <button class="form-confirm-btn login-btn" type="submit">Login</button>
+        </EditForm>
+        <div class="col-auto">
+            <h2>Do not have an account?</h2>
+            <button class="form-confirm-btn login-btn" onclick="@(() => NavManager.NavigateTo("/register"))">Register</button>
         </div>
     </div>
-
-@code {
-    private readonly LoginModel _loginModel = new() { RememberMe = true };
-        private const string ForgotPasswordUrl = "/register";
-    private string _errorMessage = "";
-
-    [CascadingParameter]
-    protected Task<AuthenticationState> AuthState { get; set; } = null!;
-
-    protected override async Task OnInitializedAsync()
-    {
-      await base.OnInitializedAsync();
-        var user = (await AuthState).User;
-        if (user.Identity is not null && user.Identity.IsAuthenticated)
-        {
-            NavManager.NavigateTo("/");
-        }
-    }
-
-
-    private async Task Authenticate()
-    {
-        _errorMessage = "";
-        
-         var user = await UserManager.FindByEmailAsync(_loginModel.Email);
-        if (user is null)
-        {
-            _errorMessage = "Incorrect email and/or password";
-            return;
-        }
-
-        if (await SignInManager.CanSignInAsync(user))
-        {
-            var result = await SignInManager.CheckPasswordSignInAsync(user, _loginModel.Password, false);
-            if (result.Succeeded)
-            {
-                AuthorizationMiddleware.RequestLogin(_loginModel, NavManager);
-            }
-            else if (result.IsLockedOut)
-            {
-                _errorMessage = "Your account has been blocked";
-            }
-            else if (result.RequiresTwoFactor)
-            {
-                throw new NotImplementedException();
-            }
-            else
-            {
-                _errorMessage = "Incorrect email and/or password";
-            }
-        }
-    }
-}
+</div>

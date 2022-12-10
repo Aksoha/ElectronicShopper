@@ -1,5 +1,9 @@
 ﻿namespace ElectronicShopper.Library.StoredProcedures.Product;
 
+
+/// <summary>
+///     Represents a stored procedure that inserts into Product table.
+/// </summary>
 internal class ProductInsertStoredProcedure : IStoredProcedure
 {
     public int CategoryId { get; set; }

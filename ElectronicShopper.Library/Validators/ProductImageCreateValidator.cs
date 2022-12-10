@@ -2,9 +2,16 @@
 
 namespace ElectronicShopper.Library.Validators;
 
+/// <summary>
+///     A set of rules validating whether <see cref="MemoryImageModel" /> can be used for inserting new image into
+///     the database.
+/// </summary>
 public class ProductImageCreateValidator : AbstractValidator<MemoryImageModel>
 {
-    private static readonly List<string> Extensions = new() { ".jpg", ".jpeg", ".png", ".svg"};
+    /// <summary>
+    ///     Supported file extensions.
+    /// </summary>
+    private static readonly List<string> Extensions = new() { ".jpg", ".jpeg", ".png", ".svg" };
 
     public ProductImageCreateValidator()
     {

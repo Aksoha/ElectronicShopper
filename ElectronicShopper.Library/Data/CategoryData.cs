@@ -4,30 +4,31 @@ using ElectronicShopper.Library.Models.Internal;
 using ElectronicShopper.Library.StoredProcedures.Category;
 using FluentValidation;
 using Microsoft.Data.SqlClient;
-using IDbEntity = ElectronicShopper.Library.Models.IDbEntity;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using IDbEntity = ElectronicShopper.Library.Models.IDbEntity;
 
 namespace ElectronicShopper.Library.Data;
 
 public class CategoryData : ICategoryData
 {
-    private readonly IValidator<CategoryCreateModel> _categoryValidator;
-    private readonly IMemoryCache _cache;
-    private readonly ILogger<CategoryData> _logger;
-    private readonly string _connectionString;
-    private readonly IMapper _mapper;
-    private readonly ISqlDataAccess _sql;
-
     /// <summary>
-    /// Key value used to cache <see cref="CategoryModel"/>.
+    ///     Key value used to cache <see cref="CategoryModel" />.
     /// </summary>
     private const string CacheName = "CategoryData";
 
+    private readonly IMemoryCache _cache;
+
     /// <summary>
-    /// Time after which cache will be removed.
+    ///     Time after which cache will be removed.
     /// </summary>
     private readonly TimeSpan _cacheTime = TimeSpan.FromDays(1);
+
+    private readonly IValidator<CategoryCreateModel> _categoryValidator;
+    private readonly string _connectionString;
+    private readonly ILogger<CategoryData> _logger;
+    private readonly IMapper _mapper;
+    private readonly ISqlDataAccess _sql;
 
 
     public CategoryData(ISqlDataAccess sql, IMapper mapper, IOptionsSnapshot<ConnectionStringSettings> settings,
@@ -150,7 +151,7 @@ public class CategoryData : ICategoryData
         var output = MapToMany(result);
         foreach (var item in output)
             await SetParent(item);
-        
+
         AddCategoryToCache(output);
         return output;
     }
@@ -172,9 +173,7 @@ public class CategoryData : ICategoryData
                  into percentId
                  where remainingNodes.Any(x => x.Id == percentId)
                  select remainingNodes.Single(x => x.Id == percentId))
-        {
             remainingNodes.Remove(parent);
-        }
 
         return remainingNodes;
     }
@@ -275,7 +274,7 @@ public class CategoryData : ICategoryData
 
 
     /// <summary>
-    /// Creates new collection of items that is stored in the memory.
+    ///     Creates new collection of items that is stored in the memory.
     /// </summary>
     /// <returns>Newly created collection.</returns>
     private ConcurrentBag<CategoryModel> CreateCacheIfItNotExist()
@@ -291,7 +290,7 @@ public class CategoryData : ICategoryData
     }
 
     /// <summary>
-    /// Adds <see cref="CategoryModel"/> to cache.
+    ///     Adds <see cref="CategoryModel" /> to cache.
     /// </summary>
     /// <param name="category">Category to be added.</param>
     private void AddCategoryToCache(CategoryModel category)
@@ -305,7 +304,7 @@ public class CategoryData : ICategoryData
 
 
     /// <summary>
-    /// Adds <see cref="CategoryModel"/> to cache.
+    ///     Adds <see cref="CategoryModel" /> to cache.
     /// </summary>
     /// <param name="categories">Categories to be added.</param>
     private void AddCategoryToCache(IEnumerable<CategoryModel> categories)
@@ -319,10 +318,10 @@ public class CategoryData : ICategoryData
     }
 
     /// <summary>
-    /// Retrieves <see cref="CategoryModel"/> from cache.
+    ///     Retrieves <see cref="CategoryModel" /> from cache.
     /// </summary>
     /// <param name="id">Id of category to retrieve.</param>
-    /// <returns><see cref="CategoryModel"/> if object was found, otherwise <see langoword="null"/>.</returns>
+    /// <returns><see cref="CategoryModel" /> if object was found, otherwise <see langoword="null" />.</returns>
     private CategoryModel? GetCategoryFromCache(int id)
     {
         var cachedCategories = GetCategoriesFromCache();
@@ -331,9 +330,9 @@ public class CategoryData : ICategoryData
 
 
     /// <summary>
-    /// Retrieves collection of <see cref="CategoryModel"/> from cache.
+    ///     Retrieves collection of <see cref="CategoryModel" /> from cache.
     /// </summary>
-    /// <returns>Collection if cache was set or not expired otherwise <see langoword="null"/>.</returns>
+    /// <returns>Collection if cache was set or not expired otherwise <see langoword="null" />.</returns>
     private ConcurrentBag<CategoryModel>? GetCategoriesFromCache()
     {
         return _cache.Get<ConcurrentBag<CategoryModel>>(CacheName);

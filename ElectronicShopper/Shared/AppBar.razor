@@ -1,15 +1,4 @@
-﻿@using ElectronicShopper.Library
-@using Microsoft.AspNetCore.Identity
-@using System.Security.Claims
-@using ElectronicShopper.Library.Identity
-@using ElectronicShopper.Library.Services
-@implements IDisposable
-@inject ICartService CartService
-@inject Navigation NavManager
-@inject UserManager<ApplicationUser> UserManager
-@inject SignInManager<ApplicationUser> SignInManager
-
-<div id="appbar" class="d-flex px-3">
+﻿<div id="appbar" class="d-flex px-3">
     <h2 class="me-auto my-auto p-2 align-self-center appbar-title" onclick="@(() => NavManager.NavigateTo("/"))">ElectronicsShopper</h2>
     <div class="p-2 align-self-center">
         <AuthorizeView>
@@ -35,37 +24,3 @@
         }
     </div>
 </div>
-
-@code {
-
-    protected override Task OnInitializedAsync()
-    {
-        CartService.CartCountChange += UpdateCartIcon;
-        return Task.CompletedTask;
-    }
-
-    private void OnCartClick()
-    {
-        NavManager.NavigateTo("/cart");
-    }
-
-    public void Dispose()
-    {
-        CartService.CartCountChange -= UpdateCartIcon;
-    }
-
-
-    private void UpdateCartIcon()
-    {
-
-        InvokeAsync(StateHasChanged);
-    }
-
-
-    private async Task<string> GetUserName(ClaimsPrincipal user)
-    {
-        var u = await UserManager.GetUserAsync(user);
-        return u.FirstName;
-    }
-
-}

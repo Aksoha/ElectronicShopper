@@ -5,6 +5,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ElectronicShopper.Library.Identity;
 
+/// <summary>
+///     Provides the APIs for user sign in.
+/// </summary>
 public class ApplicationSignInManager : SignInManager<ApplicationUser>
 {
     public ApplicationSignInManager(UserManager<ApplicationUser> userManager, IHttpContextAccessor contextAccessor,
